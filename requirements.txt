@@ -1,0 +1,14 @@
+emukit==0.4.10
+GPy==1.10.0
+gurobipy==10.0.1
+jmetalpy==1.6.0
+multiprocess==0.70.13
+numexpr==2.8.3
+numpy==1.22.3
+ortools==9.3.10497
+POT==0.8.2
+pandas==1.4.2
+pytest==7.1.2
+pyDOE==0.3.8
+scipy==1.9.0
+tqdm==4.64.0
