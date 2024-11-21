@@ -28,10 +28,6 @@ def objectives_stats(file_path):
     for column in columns:
         return_value.append((output_df[column].mean(),
                              output_df[column].std() / np.sqrt(len(output_df))))
-    # alloimmunisations = output_df['alloimmunisations'].mean(), output_df['alloimmunisations'].std() / np.sqrt(len(output_df))
-    # shortages = output_df['shortages'].mean(), output_df['shortages'].std() / np.sqrt(len(output_df))
-    # expirys = output_df['expirys'].mean(), output_df['expirys'].std() / np.sqrt(len(output_df))
-    # return alloimmunisations, shortages, expirys
     return return_value
 
 
@@ -99,17 +95,6 @@ def objectives_stats_comparison_chart(files: dict, baseline: str, figsize=(12, 8
     df_val_pct_change = df_val_pct_change.transpose()
     df_err_pct_change = df_err_pct_change.transpose()
 
-    # Create the plot
-    # fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
-    # df_val_pct_change.plot(kind='bar', yerr=df_err_pct_change, ax=ax)
-    # ax.set_ylabel('Percent Change in Objective Value')
-    # ax.set_xlabel('Objective')
-    # ax.set_title('Percent Change in Objective Values Relative to Baseline')
-    # ax.legend(bbox_to_anchor=(1.0, 1.0))
-    # fig.tight_layout()
-
-    # return fig, ax
-
     # Create a color palette
     colours = sns.color_palette('deep', df_val_pct_change.shape[1])
 
@@ -137,26 +122,6 @@ def objectives_stats_comparison_chart(files: dict, baseline: str, figsize=(12, 8
     fig.tight_layout()
 
     return fig, axs
-
-# def objectives_stats_comparison_chart(files: dict, baseline: str, figsize=(12, 8), dpi=200):
-#     df = objectives_stats_table(files)
-
-
-#     baseline_stats = df1[baseline]
-#     df1 = df1.drop(baseline, axis=1)
-#     df1 = df1.astype(float)
-#     df1 = df1.subtract(baseline_stats, axis=0)
-#     df1 = df1.transpose()
-#     df1 = df1.sort_values(by=['alloimmunisations', 'scd_shortages', 'expiries', 'all_shortages'], ascending=False)
-#     df1 = df1.transpose()
-#     fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
-#     df1.plot(kind='bar', ax=ax)
-#     ax.set_ylabel('Change in objective value')
-#     ax.set_xlabel('Objective')
-#     ax.set_title('Change in objective values relative to baseline')
-#     ax.legend(bbox_to_anchor=(1.0, 1.0))
-#     fig.tight_layout()
-#     return fig, ax
 
 
 def antigens():
@@ -211,7 +176,6 @@ def exp2_figs(abod, limited, extended, prob_neg_phen=1, figsize=None, labels=['A
     title = ['Mismatches in antigen-negative patients by antigen and matching rule',
              'Substitutions per unit transfused by antigen and matching rule',
              'Alloimmunisations by antigen and matching rule']
-    # xticks = [labels_mismatch, labels_mismatch, labels_allo]
     xticks = [labels_allo, labels_allo, labels_allo]
     cols = xticks
 
@@ -222,7 +186,6 @@ def exp2_figs(abod, limited, extended, prob_neg_phen=1, figsize=None, labels=['A
             _neg_phen = 1
         else:
             _neg_phen = prob_neg_phen
-        # fig, ax = plt.subplots(figsize=(12, 8))
         fig, ax = plt.subplots(figsize=figsize, dpi=200)
         ax.bar(x[i] - width, abod_df.loc[met[i] + '_avg', cols[i]].to_numpy() / _neg_phen, width, label=labels[0],
                yerr=abod_df.loc[met[i] + '_stderr', cols[i]].to_numpy() / _neg_phen, color=colours[0])
@@ -230,18 +193,13 @@ def exp2_figs(abod, limited, extended, prob_neg_phen=1, figsize=None, labels=['A
                yerr=limited_df.loc[met[i] + '_stderr', cols[i]].to_numpy() / _neg_phen, color=colours[1])
         ax.bar(x[i] + width, extended_df.loc[met[i] + '_avg', cols[i]].to_numpy() / _neg_phen, width, label=labels[2],
                yerr=extended_df.loc[met[i] + '_stderr', cols[i]].to_numpy() / _neg_phen, color=colours[2])
-        # ax.set_ylabel(ylabel[i], fontsize=14)
         ax.set_ylabel(ylabel[i])
-        # ax.set_title(title[i], fontsize=18)
-        # ax.set_title(title[i])
         ax.set_xticks(x[i])
-        # ax.set_xticklabels(xticks[i], fontsize=14)
         ax.set_xticklabels(xticks[i])
         if met[i] == 'subs':
             ax.legend()
         else:
             ax.legend()
-            # ax.legend(bbox_to_anchor=(1.0, 1.0))
         fig.tight_layout()
         plt.show()
         if pdfs is not None and pdfs[i] is not None:
@@ -267,7 +225,6 @@ def exp3_figs(limited, extended, prob_neg_phen=1, figsize=(12, 8), labels=['Limi
               'Expected number of alloimmunisations']
     title = ['Mismatches in antigen-negative patients by antigen and matching rule', 'Substitutions per unit transfused by antigen and matching rule',
              'Alloimmunisations by antigen and matching rule']
-    # xticks = [labels_mismatch, labels_mismatch, labels_allo]
     xticks = [labels_allo, labels_allo, labels_allo]
     cols = xticks
 
@@ -281,12 +238,8 @@ def exp3_figs(limited, extended, prob_neg_phen=1, figsize=(12, 8), labels=['Limi
                yerr=limited_df.loc[met[i] + '_stderr', cols[i]].to_numpy() / _neg_phen, color='tab:blue')
         ax.bar(x[i] + width/2, extended_df.loc[met[i] + '_avg', cols[i]].to_numpy() / _neg_phen, width, label=labels[1],
                yerr=extended_df.loc[met[i] + '_stderr', cols[i]].to_numpy() / _neg_phen, color='tab:green')
-        # ax.set_ylabel(ylabel[i], fontsize=14)
         ax.set_ylabel(ylabel[i])
-        # ax.set_title(title[i], fontsize=18)
-        # ax.set_title(title[i])
         ax.set_xticks(x[i])
-        # ax.set_xticklabels(xticks[i], fontsize=14)
         ax.set_xticklabels(xticks[i])
         ax.legend()
         fig.tight_layout()
@@ -326,16 +279,6 @@ def create_histograms(data1, data2, data3, xlabel='Total expected alloimmunisati
     # Create a figure and axes for the panel
     fig, ax = plt.subplots(figsize=(8, 6), dpi=200)
 
-    # Plot histograms for all datasets
-    # ax.hist(data1, color='tab:blue', alpha=0.5, label=labels[0], density=density)
-    # ax.hist(data2, color='tab:green', alpha=0.5, label=labels[1], density=density)
-    # ax.hist(data3, color='tab:red', alpha=0.5, label=labels[2], density=density)
-
-    # Using seaborn.kdeplot instead
-    # sns.kdeplot(data1, color='tab:blue', alpha=0.5, label='Limited Rule', ax=ax, shade=True)
-    # sns.kdeplot(data2, color='tab:green', alpha=0.5, label='Extended Rule', ax=ax, fill=True)
-    # sns.kdeplot(data3, color='darkgreen', alpha=0.5, label='Optimised Extended Rule', ax=ax, fill=True)
-
     # Using seaborn.histplot instead
     sns.histplot(data1, color='tab:blue', alpha=0.5,
                  label=labels[0], ax=ax, kde=density)
@@ -351,7 +294,6 @@ def create_histograms(data1, data2, data3, xlabel='Total expected alloimmunisati
 
     if xlim is not None:
         ax.set_xlim(*xlim)
-    # ax.set_xlim(0, 12)
 
     # Add legend
     ax.legend()
@@ -406,7 +348,6 @@ def create_stock_levels_graph(datafilename, columns, labels=None, xlabel='Time (
         df.columns = labels
     fig = plt.figure(dpi=dpi)
     ax = fig.gca()
-    # ax.grid(True)
     ax = df.plot(figsize=figsize, kind='line', xlabel=xlabel,
                  ylabel=ylabel, ax=ax, grid=True)
     if not raw_data:
@@ -516,7 +457,6 @@ def plot_avg_age_dist_blood_scd(df, title='Mean age distribution of blood given 
     fig.tight_layout()
     if pdf is not None:
         fig.savefig(pdf, bbox_inches='tight')
-    # fig.show()
     if print_mean:
         print(np.average(df_hist.index, weights=df_hist))
 
@@ -540,9 +480,6 @@ def ccdf_avg_age_dist_blood_scd(datafilename, array='age_dist_given_to_scd', age
     i_max = df_hist.index.max()
     tot_mass = df_hist.loc[i_min:i_max].sum()
     mass_above = df_hist[df_hist.index > above_age].sum()
-    # df_hist = df_hist.sort_index(ascending=False)
-    # ccdf = df_hist.cumsum()
-    # ccdf = ccdf / ccdf.max()
     ccdf = mass_above / tot_mass
     return ccdf
 
@@ -580,7 +517,6 @@ def add_totals_to_abo_combos(reshaped_abo_combos):
 
 
 def mixed_allocation_totals(datafilename, print_with_stderr=False, breakdowns=False):
-    # reshaped_means = reshape_abo_combos(datafilename, mixed_match=True)
     if datafilename.endswith('_output.tsv'):
         datafilename = datafilename.replace('_output.tsv', '_abodmm_subs.tsv')
     data = pd.read_csv(os.path.realpath(
@@ -715,8 +651,6 @@ def avg_stock_composition(rules, rule_files, donations=None,
                           pdf=None):
     import matplotlib.ticker as mtick
 
-    # rules = ['Donations', 'E0', 'E0 (No SUB)']
-    # rule_files = [naive_weights, extended_no_substitution]
     blood_grps = ['O-', 'O+', 'B-', 'B+', 'A-', 'A+', 'AB-', 'AB+']
     if donations is None:
         donations = np.array([14.6, 36.2, 2.8, 7.8, 7.8, 28.4, 0.6, 1.8])
@@ -735,28 +669,8 @@ def avg_stock_composition(rules, rule_files, donations=None,
             data[:i], axis=0), label=blood_grps[i])
     ax.set_ylabel('Proportion of Total Stock')
     ax.yaxis.set_major_formatter(mtick.PercentFormatter(1.0))
-    # ax.set_title('Average Blood Stock Composition')
     ax.legend(ncol=ncol, bbox_to_anchor=bbox_to_anchor, loc='upper center')
-    # ax.grid()
     fig.tight_layout()
     if pdf is not None:
         fig.savefig(pdf, bbox_inches='tight')
     plt.show()
-
-# s_ax = stocks_extended[stocks_extended.columns[:8]].plot(
-#     kind='line', xlabel='Days', ylabel='Units of stock in inventory', figsize=(12,8),
-#     title="Stock levels of major groups for Extended rule")
-# sdevs = serrs * np.sqrt(1500)
-# for i in range(8):
-#     s_ax.fill_between(
-#         np.arange(len(serrs)), stocks_extended.iloc[:, i] + sdevs.iloc[:, i],
-#         stocks_extended.iloc[:, i] - sdevs.iloc[:, i], alpha=0.25)
-# s_ax.legend(loc='center left',bbox_to_anchor=(1.0, 0.5))
-
-# stocks_limited = pd.read_csv(
-#     os.path.join(out_folder, limited_prefix + '_stocks.tsv'), sep='\t', index_col=0)
-# slerrs = pd.DataFrame(stocks_limited.iloc[:, 8:].to_numpy(), columns=stocks_limited.columns[:8])
-# stocks_limited[stocks_limited.columns[:8]].plot(
-#     kind='line', xlabel='Days', ylabel='Units of stock in inventory',
-#     legend=True, grid=True, yerr=serrs, figsize=(12,8),
-#     title="Stock levels of major groups for Limited rule")
