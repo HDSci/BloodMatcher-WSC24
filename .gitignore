@@ -1,0 +1,29 @@
+# IDE config files
+.vscode/
+.idea/
+# Virtual Environments
+venv/
+env/
+env
+.python-version
+# Test Caches
+__pycache__
+.pytest_cache/
+# Data
+data/*
+!data/bloodgroup_frequencies
+!data/antibody_frequencies
+!data/immune_risks
+out/
+# Miscellaneous
+nohup*.out
+scratch/
+# Cython(ized) files
+*.so
+*.c
+*.o
+mincostflow.html
+*-x86_64-cpython*
+# Slurm
+slurm/*
+slurm_script-*.sh

@@ -1,0 +1,16 @@
+{"MATCHING_RULES":
+    {
+        "ABOD":
+            {
+                "antigen_set": ["A", "B", "D"]
+            },
+        "Limited":
+            {
+                "antigen_set": ["A", "B", "D", "C", "c", "E", "e", "K"]
+            },
+        "Extended":
+            {
+                "antigen_set": ["A", "B", "D", "C", "c", "E", "e", "K", "k", "Fya", "Fyb", "Jka", "Jkb", "M", "N", "S", "s"]
+            }
+    }
+}
