@@ -16,7 +16,8 @@ class Demand:
         self.total_requested_units = 0
         self._demand_choices = self.data.iloc[:, 0].to_numpy()
         self._demand_probabilities = self.data.iloc[:, 1].to_numpy()
-        self.dummy_demand = self._setup_dummy_demand(dummy_data, dummy_extra_demand)
+        self.dummy_demand = self._setup_dummy_demand(
+            dummy_data, dummy_extra_demand)
 
     def tick(self):
         self.current_date += 1
@@ -39,7 +40,8 @@ class Demand:
         elif num_requests is None and self.num_requests_dist is not None:
             num_requests = self.num_requests_dist.rvs(random_state=rng)
 
-        result = ((self._request_id_ticker + i, *self._demand(rng), self.current_date) for i in range(num_requests))
+        result = ((self._request_id_ticker + i, *self._demand(rng),
+                  self.current_date) for i in range(num_requests))
         result = tuple(result)
         self._request_id_ticker += num_requests
         self._add_to_total_demand(result)
@@ -80,7 +82,8 @@ class Demand:
             return generated_demand
         self.dummy_demand[:, 3] = self.current_date
         self.total_requested_units += self.dummy_demand[:, 2].sum() if add_to_tot_demand else 0
-        result = np.vstack((np.atleast_2d(generated_demand), self.dummy_demand))
+        result = np.vstack(
+            (np.atleast_2d(generated_demand), self.dummy_demand))
         return result
 
     def _allo_antibodies(self, num_requests, rng):

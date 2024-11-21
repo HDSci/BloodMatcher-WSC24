@@ -10,7 +10,8 @@ import scipy.stats as stats
 logger = logging.getLogger(__name__)
 
 # What to run in main
-main_func = 'EXPERIMENT_3'  # 'BAYES_OPT' | 'EXPERIMENT_3' | 'PRECOMPUTE' | 'MULTI_OBJECTIVE_BAYES_OPT'
+# 'BAYES_OPT' | 'EXPERIMENT_3' | 'PRECOMPUTE' | 'MULTI_OBJECTIVE_BAYES_OPT'
+main_func = 'EXPERIMENT_3'
 
 seed = 0xBE_BAD_BAE
 
@@ -99,7 +100,7 @@ bayes_opt = {
     'normalized_kernel': True,
 }
 
-solver = 'maxflow' # 'pot' or 'ortools' or ('maxflow' or 'ortools-maxflow)
+solver = 'maxflow'  # 'pot' or 'ortools' or ('maxflow' or 'ortools-maxflow)
 
 constraints = {
     'max_age': 35,
@@ -123,11 +124,16 @@ if len(sys.argv) > 1:
         logger.exception('No parameter file passed. Using default parameters.')
         print('No parameter file passed. Using default parameters.')
     except FileNotFoundError as e:
-        logger.exception(f'Parameter file {pfile} not found. Using default parameters.')
+        logger.exception(
+            f'Parameter file {pfile} not found. Using default parameters.')
         print(f'Parameter file {pfile} not found. Using default parameters.')
     except ImportError as e:
-        logger.exception(f'Parameter file {pfile} is not a valid python file. Using default parameters.')
-        print(f'Parameter file {pfile} is not a valid python file. Using default parameters.')
+        logger.exception(
+            f'Parameter file {pfile} is not a valid python file. Using default parameters.')
+        print(
+            f'Parameter file {pfile} is not a valid python file. Using default parameters.')
     except Exception as e:
-        logger.exception(f'Error while importing parameter file {pfile}. Using default parameters.')
-        print(f'Error while importing parameter file {pfile}. Using default parameters.')
+        logger.exception(
+            f'Error while importing parameter file {pfile}. Using default parameters.')
+        print(
+            f'Error while importing parameter file {pfile}. Using default parameters.')

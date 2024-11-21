@@ -18,8 +18,10 @@ class MatchingArea:
             self, algo=None, antigens: Antigens = None, matching_rule='ABOD', anticipation=False, cost_weights=None,
             solver='POT', young_blood_constraint=True, substitution_penalty_parity=True) -> None:
         self.current_date = 0
-        self.matches = np.empty((0, 5), dtype=int)  # ID demand, supply, date, type demand, supply
-        self.pending_requests = np.empty(shape=(0, 5), dtype=int)  # 5th column = matched or not
+        # ID demand, supply, date, type demand, supply
+        self.matches = np.empty((0, 5), dtype=int)
+        self.pending_requests = np.empty(
+            shape=(0, 5), dtype=int)  # 5th column = matched or not
         self.copy_of_inventory = None
         self.matching_algo = algo
         self.matching_rule = matching_rule
@@ -32,17 +34,21 @@ class MatchingArea:
         self.abo_cm_counts = 0
         self.scd_shortages = 0
         self.all_shortages = 0
-        self.pr_allo_abs = np.empty(shape=(0, len(self.antigens.alloantibody_freqs)), dtype=bool)
+        self.pr_allo_abs = np.empty(
+            shape=(0, len(self.antigens.alloantibody_freqs)), dtype=bool)
         self.anticipation = anticipation
         self.forecast_units = np.empty(shape=(0, 3), dtype=int)
-        self.forecast_requests = np.empty(shape=(0, 5), dtype=int)  # 5th column = matched or not
-        self.fr_allo_abs = np.empty(shape=(0, len(self.antigens.alloantibody_freqs)), dtype=bool)
+        self.forecast_requests = np.empty(
+            shape=(0, 5), dtype=int)  # 5th column = matched or not
+        self.fr_allo_abs = np.empty(
+            shape=(0, len(self.antigens.alloantibody_freqs)), dtype=bool)
         if cost_weights is None:
             cost_weights = np.array([1, 1, 1, 1, 1])
         elif np.abs(cost_weights).sum() == 0:
             cost_weights = np.array([1, 1, 1, 1, 1])
         if substitution_penalty_parity:
-            cost_weights[2] = cost_weights[1]  # Equal weight for major antigen substitution and sum of substitutions
+            # Equal weight for major antigen substitution and sum of substitutions
+            cost_weights[2] = cost_weights[1]
         _cost_weights = cost_weights / np.abs(cost_weights).sum()
         self.transport_matching_weights = _cost_weights
         self.ages_given_to_scd = np.empty(shape=(0, 35+1), dtype=int)
@@ -66,7 +72,8 @@ class MatchingArea:
             return
         time = np.full(len(self.pending_requests), self.current_date)[:, None]
         unmet_requests = np.hstack((self.pending_requests, time))
-        self.immediately_unmet_requests = np.vstack((self.immediately_unmet_requests, unmet_requests))
+        self.immediately_unmet_requests = np.vstack(
+            (self.immediately_unmet_requests, unmet_requests))
 
     def remove_matched_requests(self):
         # TODO: Parameterize whether partially satisfied requests are removed.
@@ -84,7 +91,8 @@ class MatchingArea:
         if demand.size <= 0:
             return
         if demand.shape[1] < self.pending_requests.shape[1]:
-            padding_shape = (demand.shape[0], self.pending_requests.shape[1] - demand.shape[1])
+            padding_shape = (
+                demand.shape[0], self.pending_requests.shape[1] - demand.shape[1])
             padding = np.zeros(padding_shape, dtype=int)
             demand = np.hstack((demand, padding))
         self.pending_requests = np.vstack((self.pending_requests, demand))
@@ -111,8 +119,11 @@ class MatchingArea:
         free_inventory = np.full(len(self.copy_of_inventory), True)
         inv_index = np.arange(len(free_inventory))
         for i, request in enumerate(self.pending_requests):
-            antigen_compatibility = bnot(request[1], self.antigens.mask) & self.copy_of_inventory[:, 1]
-            compatibility = antigen_compatibility < 2 ** (self.antigens.vector_length - 3)  # Minus 3 for ABD antigens
+            antigen_compatibility = bnot(
+                request[1], self.antigens.mask) & self.copy_of_inventory[:, 1]
+            # Minus 3 for ABD antigens
+            compatibility = antigen_compatibility < 2 ** (
+                self.antigens.vector_length - 3)
             avail_and_compat = compatibility & free_inventory
             if not avail_and_compat.any():
                 continue
@@ -156,7 +167,8 @@ class MatchingArea:
         reqs_hist = reqs[:, 2].astype(np.int64)
         sum_reqs = reqs_hist.sum()
         # Alloantibodies
-        reqs_abs = np.ones((reqs_phen.shape[0], reqs_phen.shape[1] - 3), dtype=int)
+        reqs_abs = np.ones(
+            (reqs_phen.shape[0], reqs_phen.shape[1] - 3), dtype=int)
         abs_idx = (reqs_phen[:, 3:] == 0) & reqs_ab_mask
         reqs_abs[abs_idx] = 0
         if self.matching_rule == 'ABOD':
@@ -175,8 +187,10 @@ class MatchingArea:
             if self.matching_rule == 'Limited':
                 imm = 0
             else:
-                imm = immunogenicity(units_phen[:, minor], reqs_phen[:, minor], non_rh_kell_allo_normalised)
-            subst = sum_of_substitutions(units_phen[:, minor], reqs_phen[:, minor], self.antigens.allo_risk[minor[3:]])
+                imm = immunogenicity(
+                    units_phen[:, minor], reqs_phen[:, minor], non_rh_kell_allo_normalised)
+            subst = sum_of_substitutions(
+                units_phen[:, minor], reqs_phen[:, minor], self.antigens.allo_risk[minor[3:]])
         if self.anticipation:
             units_abod_ints = units[:, 1] >> self.antigens.vector_length - 3
             reqs_abod_ints = reqs[:, 1] >> self.antigens.vector_length - 3
@@ -188,12 +202,15 @@ class MatchingArea:
             old_blood = young_blood_penalty(self.current_date - units[:, 2], max_young_blood,
                                             reqs[:, 3] - self.current_date, scd_patients)
         else:
-            usab_diff = major_antigen_substitution(units_phen[:, major], reqs_phen[:, major])
+            usab_diff = major_antigen_substitution(
+                units_phen[:, major], reqs_phen[:, major])
             # If YB constraint is False, then FIFO is applied to SCD patients
             fifo = fifo_discount(shelf_life + units[:, 2] - self.current_date,
                                  scd_pat=scd_patients * self.yb_constraint)
-            old_blood = young_blood_penalty(self.current_date - units[:, 2], scd_pat=scd_patients)
-        antigen_compatibility = not_compatible(reqs_abo_abs, units[:, 1][None, :], self.antigens.mask)
+            old_blood = young_blood_penalty(
+                self.current_date - units[:, 2], scd_pat=scd_patients)
+        antigen_compatibility = not_compatible(
+            reqs_abo_abs, units[:, 1][None, :], self.antigens.mask)
         abod_incompat_indices = antigen_compatibility > 0
         incompat_indices = usab_diff < 0
         usab_diff[incompat_indices] = 0
@@ -208,14 +225,16 @@ class MatchingArea:
         w_3_fifo[core_fifo] *= w[3]
         # w_3 = w[3] * core_fifo
         # w_3[w_3 == 0] = 1
-        core_old_blood = old_blood <= young_blood_penalty(np.array([max_young_blood - 1]), max_young_blood)[0, 0]
+        core_old_blood = old_blood <= young_blood_penalty(
+            np.array([max_young_blood - 1]), max_young_blood)[0, 0]
         w_4_old_blood = old_blood * self.yb_constraint
         w_4_old_blood[core_old_blood] *= w[4]
         # w_4 = w[4] * core_old_blood
         # w_4[w_4 == 0] = 1
 
         if self.matching_rule != 'ABOD':
-            cost_matrix = w[0] * imm + w[2] * subst + w[1] * usab_diff + abod_incompat - w_3_fifo + w_4_old_blood
+            cost_matrix = w[0] * imm + w[2] * subst + w[1] * \
+                usab_diff + abod_incompat - w_3_fifo + w_4_old_blood
         else:
             cost_matrix = usab_diff + abod_incompat - fifo + old_blood
 
@@ -257,24 +276,29 @@ class MatchingArea:
                             category=UserWarning,
                             message='Input histogram consists of integer.*'
                         )
-                        plan = ot.emd(units_hist, reqs_hist, cost_matrix.T, numItermax=itern)
+                        plan = ot.emd(units_hist, reqs_hist,
+                                      cost_matrix.T, numItermax=itern)
                     _plan = plan[:num_t_units, :num_t_reqs].T
-                    assert not np.any(_plan[abod_incompat_indices[:num_t_reqs, :num_t_units]] > 0)
+                    assert not np.any(
+                        _plan[abod_incompat_indices[:num_t_reqs, :num_t_units]] > 0)
                     break
                 except AssertionError as e:
                     if att + 1 < attempts:
                         continue
                     else:
-                        raise RuntimeError('Transport solver did not find optimum.') from e
+                        raise RuntimeError(
+                            'Transport solver did not find optimum.') from e
         elif solver.lower() == 'ortools':
             # plan = self._ortools_mincostflow(units_hist, reqs_hist, cm.T, cost_matrix.T)
             plan = mincostflow(units_hist, reqs_hist, cm.T, cost_matrix.T)
             _plan = plan[:num_t_units, :num_t_reqs].T
-            assert not np.any(_plan[abod_incompat_indices[:num_t_reqs, :num_t_units]] > 0)
+            assert not np.any(
+                _plan[abod_incompat_indices[:num_t_reqs, :num_t_units]] > 0)
         elif solver.lower() == 'ortools-maxflow' or solver.lower() == 'maxflow':
             plan = maxflow_mincost(units_hist, reqs_hist, cm.T, cost_matrix.T)
             _plan = plan[:num_t_units, :num_t_reqs].T
-            assert not np.any(_plan[abod_incompat_indices[:num_t_reqs, :num_t_units]] > 0)
+            assert not np.any(
+                _plan[abod_incompat_indices[:num_t_reqs, :num_t_units]] > 0)
         else:
             raise ValueError(f'Unknown solver {solver}.')
 
@@ -286,14 +310,16 @@ class MatchingArea:
 
         times = np.full(len(di), self.current_date, np.int64)[:, None]
         reqs[:num_t_reqs, 4] = _plan.sum(axis=1)
-        matches = np.hstack((reqs[pj, 0:1], units[di, 0:1], times, reqs[pj, 1:2], units[di, 1:2]))
+        matches = np.hstack(
+            (reqs[pj, 0:1], units[di, 0:1], times, reqs[pj, 1:2], units[di, 1:2]))
         self._todays_matches = matches
 
         # Measure crossmatching
         self._measure_abod_crossmatch(di, pj, units_phen, reqs_phen)
-        
+
         # Measure mixed match substitutions
-        self._measure_abod_mixed_match_subsititutions(di, pj, units_phen, reqs_phen)
+        self._measure_abod_mixed_match_subsititutions(
+            di, pj, units_phen, reqs_phen)
 
         # Measure the age distribution of the units given to SCD patients
         self._measure_ages_given_to_scd(di, units, True)
@@ -302,10 +328,10 @@ class MatchingArea:
 
     def update_matches(self, remove_dummy_demand: bool = True) -> np.ndarray:
         """Update the matches with the matches from the current day.
-        
+
         Adds the matches from the current day to the matches from previous days.
         Also updates the number of matches and shortages.
-        
+
         :param bool remove_dummy_demand: Whether to remove the dummy demand from the matches.
         :return np.ndarray: The updated record of matches.
         """
@@ -317,16 +343,21 @@ class MatchingArea:
             self.num_matches += len(_todays_matches)
             self.scd_shortages += self.pending_requests[self.pending_requests[:, 0]
                                                         >= 0, 2].sum() - len(_todays_matches)
-            self.all_shortages += self.pending_requests[:, 2].sum() - len(self._todays_matches)
+            self.all_shortages += self.pending_requests[:,
+                                                        2].sum() - len(self._todays_matches)
         else:
-            self.scd_shortages += self.pending_requests[self.pending_requests[:, 0] >= 0, 2].sum()
+            self.scd_shortages += self.pending_requests[self.pending_requests[:, 0] >= 0, 2].sum(
+            )
             self.all_shortages += self.pending_requests[:, 2].sum()
         return self.matches
 
     def warmup_clear(self):
-        self.matches = np.empty((0, 5), dtype=int)  # ID demand, supply, date, type demand, supply
-        self.pending_requests = np.empty(shape=(0, 5), dtype=int)  # 5th column = matched or not
-        self.pr_allo_abs = np.empty(shape=(0, len(self.antigens.alloantibody_freqs)), dtype=bool)
+        # ID demand, supply, date, type demand, supply
+        self.matches = np.empty((0, 5), dtype=int)
+        self.pending_requests = np.empty(
+            shape=(0, 5), dtype=int)  # 5th column = matched or not
+        self.pr_allo_abs = np.empty(
+            shape=(0, len(self.antigens.alloantibody_freqs)), dtype=bool)
         self.immediately_unmet_requests = np.empty(shape=(0, 6), dtype=int)
         self.num_matches = 0
         self.scd_shortages = 0
@@ -343,13 +374,16 @@ class MatchingArea:
 
     def clear_forecasts(self):
         self.forecast_units = np.empty(shape=(0, 3), dtype=int)
-        self.forecast_requests = np.empty(shape=(0, 5), dtype=int)  # 5th column = matched or not
-        self.fr_allo_abs = np.empty(shape=(0, len(self.antigens.alloantibody_freqs)), dtype=bool)
+        self.forecast_requests = np.empty(
+            shape=(0, 5), dtype=int)  # 5th column = matched or not
+        self.fr_allo_abs = np.empty(
+            shape=(0, len(self.antigens.alloantibody_freqs)), dtype=bool)
 
     def push_update_to_inventory(self, inventory):
         if self._todays_matches.size <= 0:
             return
-        i = np.isin(self.copy_of_inventory[:, 0], self._todays_matches[:, 1], assume_unique=True)
+        i = np.isin(
+            self.copy_of_inventory[:, 0], self._todays_matches[:, 1], assume_unique=True)
         _matched_units = self.copy_of_inventory[i]
         inventory.remove_from_store(_matched_units)
 
@@ -358,7 +392,8 @@ class MatchingArea:
         return mismatched
 
     def measure_cumulative_alloimmunisation(self, mismatched):
-        cum_alloimmunisations = mismatched[:, 3:].sum(axis=0) * self.antigens.allo_risk
+        cum_alloimmunisations = mismatched[:, 3:].sum(
+            axis=0) * self.antigens.allo_risk
         return cum_alloimmunisations
 
     def measure_substitutions(self, demand_phens, supply_phens):
@@ -389,7 +424,7 @@ class MatchingArea:
         # Remove non-SCD patients
         i = i[self._todays_matches[:, 0] >= 0]
         j = j[self._todays_matches[:, 0] >= 0]
-        
+
         # Measure number of times an abod/abo/d substitution was done
         dons = units_phen[i, :3]
         pats = reqs_phen[j, :3]
@@ -412,15 +447,17 @@ class MatchingArea:
         abo_mm_count = np.zeros(len(abo_combs))
         d_mm_count = np.zeros(len(d_combs))
         # Count the number of substitutions for each unique combination
-        unique, counts = np.unique(abod_phens_joined, axis=0, return_counts=True)
+        unique, counts = np.unique(
+            abod_phens_joined, axis=0, return_counts=True)
         for k, u in enumerate(unique):
             abod_mm_count[(abod_combs == u).all(axis=1)] += counts[k]
-            abo_mm_count[(abo_combs == u[[0, 1, 3, 4]]).all(axis=1)] += counts[k]
+            abo_mm_count[(abo_combs == u[[0, 1, 3, 4]]
+                          ).all(axis=1)] += counts[k]
             d_mm_count[(d_combs == u[[2, 5]]).all(axis=1)] += counts[k]
         self.abod_mm_counts += abod_mm_count
         self.abo_mm_counts += abo_mm_count
         self.d_mm_counts += d_mm_count
-        
+
         # Measure how many patients received an abod/abo/d substitution
         unique_patients = np.unique(j)
         abod_mm_pat_count = 0
@@ -434,11 +471,11 @@ class MatchingArea:
             units_given_abo_type = dons[units_given_indices, :2].dot([2, 1])
             d_mm_pat_count += np.any(units_given_d_type < pat_d_type) * 1
             abo_mm_pat_count += np.any(units_given_abo_type < pat_abo_type) * 1
-            abod_mm_pat_count += np.any((units_given_d_type < pat_d_type) & (units_given_abo_type < pat_abo_type)) * 1
+            abod_mm_pat_count += np.any((units_given_d_type < pat_d_type)
+                                        & (units_given_abo_type < pat_abo_type)) * 1
         self.abod_mm_pat_counts += abod_mm_pat_count
         self.abo_mm_pat_counts += abo_mm_pat_count
         self.d_mm_pat_counts += d_mm_pat_count
-        
 
     def _measure_ages_given_to_scd(self, i, units, remove_dummy_demand=True):
         if remove_dummy_demand:

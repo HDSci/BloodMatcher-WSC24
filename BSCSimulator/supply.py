@@ -32,7 +32,8 @@ class Supply:
             num_units = self.num_units_dist.rvs(random_state=rng)
 
         phenos = self._supply(rng, num_units)[:, None]
-        ids = np.arange(self._unit_id_ticker, self._unit_id_ticker + num_units)[:, None]
+        ids = np.arange(self._unit_id_ticker,
+                        self._unit_id_ticker + num_units)[:, None]
         times = np.full(num_units, self.current_date, dtype=int)[:, None]
         result = np.hstack((ids, phenos, times))
         self._unit_id_ticker += num_units

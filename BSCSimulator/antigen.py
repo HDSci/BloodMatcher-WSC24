@@ -4,7 +4,8 @@ from typing import List, Union
 import numpy as np
 import pandas as pd
 
-DEFAULT_ANTIGEN_ORDER = ('A', 'B', 'D', 'C', 'c', 'E', 'e', 'K', 'k', 'Fya', 'Fyb')
+DEFAULT_ANTIGEN_ORDER = ('A', 'B', 'D', 'C', 'c', 'E',
+                         'e', 'K', 'k', 'Fya', 'Fyb')
 
 DEFAULT_VECTOR_LENGTH = 2 ** 5
 
@@ -21,12 +22,15 @@ class Antigens:
         self.vector_length = len(antigens)
         assert set(self.antigen_order).issubset(set(self.antigens))
         self.mask = 2 ** self.vector_length - 1
-        self.reference = self._setup_antigen_dict(antigens, self.antigen_order, self.vector_length)
+        self.reference = self._setup_antigen_dict(
+            antigens, self.antigen_order, self.vector_length)
         self.antigen_index = list(self.reference.keys())
-        self.allo_risk = np.ones(self.vector_length - 3) if alloimmunisation_risk is None else alloimmunisation_risk
+        self.allo_risk = np.ones(
+            self.vector_length - 3) if alloimmunisation_risk is None else alloimmunisation_risk
         self.matching_antigens = [a for a in self.antigen_index if a in rule]
         self.major_mask = [a in ['A', 'B', 'D'] for a in self.antigen_index]
-        self.minor_mask = [a not in ['A', 'B', 'D'] and a in rule for a in self.antigen_index]
+        self.minor_mask = [a not in ['A', 'B', 'D']
+                           and a in rule for a in self.antigen_index]
         rh_kell = ('C', 'c', 'E', 'e', 'K')
         self.rhkell_mask = [a in rh_kell for a in self.antigen_index]
         self.alloantibody_freqs = allo_Abs
@@ -44,7 +48,8 @@ class Antigens:
         return ant_dict
 
     def _setup_convert_to_binarray(self):
-        self._binarrays = self._convert_to_binarray([i for i in range(2 ** self.vector_length)])
+        self._binarrays = self._convert_to_binarray(
+            [i for i in range(2 ** self.vector_length)])
 
     def convert_to_int(self, antigens: List[str], base: str = 'neg') -> int:
         if base == 'neg':
@@ -60,11 +65,12 @@ class Antigens:
                 num -= self.reference.get(a, 0)
             return num
         else:
-            raise ValueError(f'Parameter base must be "neg" or "pos" only, got "{base}" instead.')
+            raise ValueError(
+                f'Parameter base must be "neg" or "pos" only, got "{base}" instead.')
 
     def convert_to_binarray(self, a: Union[int, List[int]]) -> np.ndarray:
         return self._binarrays[a]
-    
+
     def _convert_to_binarray(self, a):
         if isinstance(a, int):
             return np.array(binarray(a, self.vector_length))
@@ -100,7 +106,8 @@ class Antigens:
         return symbols
 
     def convert_to_full_symbols(self, a, abo=True):
-        array = np.atleast_2d(self.convert_to_binarray(a))[:, :len(self.antigen_index)]
+        array = np.atleast_2d(self.convert_to_binarray(a))[
+            :, :len(self.antigen_index)]
         num_phens = len(array)
         ant_pos_template = [s + '+' for s in self.antigen_index]
         ant_neg_template = [s + '-' for s in self.antigen_index]
@@ -116,9 +123,12 @@ class Antigens:
         dpos_template = np.full((num_phens, 1), '+', np.dtype(('U', 6)))
         dneg_template = np.full((num_phens, 1), '-', np.dtype(('U', 6)))
         abd_symbols[:, :2][array[:, :2] == 1] = abd_template[array[:, :2] == 1]
-        abd_symbols[:, 2:][array[:, 2:3] == 1] = dpos_template[array[:, 2:3] == 1]
-        abd_symbols[:, 2:][array[:, 2:3] == 0] = dneg_template[array[:, 2:3] == 0]
-        abd_symbols = np.char.add(np.char.add(abd_symbols[:, 0:1], abd_symbols[:, 1:2]), abd_symbols[:, 2:3])
+        abd_symbols[:, 2:][array[:, 2:3] ==
+                           1] = dpos_template[array[:, 2:3] == 1]
+        abd_symbols[:, 2:][array[:, 2:3] ==
+                           0] = dneg_template[array[:, 2:3] == 0]
+        abd_symbols = np.char.add(np.char.add(
+            abd_symbols[:, 0:1], abd_symbols[:, 1:2]), abd_symbols[:, 2:3])
         abd_symbols[abd_symbols == '+'] = 'O+'
         abd_symbols[abd_symbols == '-'] = 'O-'
         symbols = np.hstack((abd_symbols, symbols[:, 3:]))
@@ -178,4 +188,5 @@ if __name__ == "__main__":
     people_counts = np.array([count_set_bits(i) for i in people_phen])
     people_cum_counts = counts_to_cumulative(people_counts)
     people_bin_arrs = np.array([binarray(i, 7) for i in people_phen])
-    people_bit_indices = get_set_bits_indexes(people_bin_arrs, people_cum_counts)
+    people_bit_indices = get_set_bits_indexes(
+        people_bin_arrs, people_cum_counts)

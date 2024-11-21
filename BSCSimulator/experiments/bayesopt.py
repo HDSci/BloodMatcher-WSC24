@@ -69,20 +69,23 @@ class MultiObjectiveBayesianOptimizationLoop(OuterLoop):
         if acquisition is None:
             acquisition = ExpectedImprovement(model)
 
-        model_updaters = FixedIntervalUpdater(model, update_interval, targets_extractor)
+        model_updaters = FixedIntervalUpdater(
+            model, update_interval, targets_extractor)
 
         if acquisition_optimizer is None:
             acquisition_optimizer = GradientAcquisitionOptimizer(space)
         if batch_size == 1:
             _log.info('Batch size is 1, using SequentialPointCalculator')
-            candidate_point_calculator = SequentialPointCalculator(acquisition, acquisition_optimizer)
+            candidate_point_calculator = SequentialPointCalculator(
+                acquisition, acquisition_optimizer)
         else:
-            _log.info(f'Batch size is {batch_size}, using LocalPenalizationPointCalculator')
+            _log.info(
+                f'Batch size is {batch_size}, using LocalPenalizationPointCalculator')
             log_acquisition = LogAcquisition(acquisition)
             candidate_point_calculator = LocalPenalizationPointCalculator(
                 log_acquisition, acquisition_optimizer, model, space, batch_size)
 
-        #extra_objectives = {k: Y_init[:, v:v+1] for k, v in extra_objectives_names.items()}
+        # extra_objectives = {k: Y_init[:, v:v+1] for k, v in extra_objectives_names.items()}
         loop_state = create_loop_state(X_init, Y_init)
 
         super().__init__(candidate_point_calculator, model_updaters, loop_state)
@@ -102,9 +105,11 @@ class MultiObjectiveBayesianOptimizationResults:
         self.loop_state = loop_state
         self.ideal_solution = np.min(loop_state.Y, axis=0)
         self.nadir_solution = np.max(loop_state.Y, axis=0)
-        self.hv_ref_point = self.nadir_solution + 0.01 * (self.nadir_solution - self.ideal_solution)
+        self.hv_ref_point = self.nadir_solution + 0.01 * \
+            (self.nadir_solution - self.ideal_solution)
         self._pareto_ranker = FastNonDominatedRanking()
-        self.pareto_front_X, self.pareto_front_Y = self._compute_pareto_front(loop_state)
+        self.pareto_front_X, self.pareto_front_Y = self._compute_pareto_front(
+            loop_state)
         self.hypervolume = self._compute_hypervolume(loop_state)
 
     def _compute_pareto_front(self, loop_state: LoopState = None):
@@ -114,13 +119,16 @@ class MultiObjectiveBayesianOptimizationResults:
         X = loop_state.X
         Y = loop_state.Y
         C = np.zeros((X.shape[0], 1))
-        x_bounds = np.hstack((np.zeros((X.shape[1], 1)), np.ones((X.shape[1], 1))))
+        x_bounds = np.hstack(
+            (np.zeros((X.shape[1], 1)), np.ones((X.shape[1], 1))))
         c_bounds = np.array([[-np.inf, np.inf]])
 
-        solutions = Individual.create_individual_solutions(x_bounds, X, Y, C, c_bounds)
+        solutions = Individual.create_individual_solutions(
+            x_bounds, X, Y, C, c_bounds)
         self._pareto_ranker.compute_ranking(solutions)
         pareto_front_sols = self._pareto_ranker.ranked_sublists[0]
-        self._pareto_front = np.vstack([ind.to_numpy() for ind in pareto_front_sols])
+        self._pareto_front = np.vstack(
+            [ind.to_numpy() for ind in pareto_front_sols])
         return self._pareto_front[:, :X.shape[1]], self._pareto_front[:, X.shape[1]:]
 
     def _compute_hypervolume(self, loop_state: LoopState = None):
@@ -194,9 +202,10 @@ class TargetExtractorFunction:
         # Weight samples
         Y_weighted = Y_norm * weights
         # Scalarise samples using augmented Tchebycheff
-        Y_scalarised = np.max(Y_weighted, axis=1) + self.rho * Y_weighted.sum(axis=1)
+        Y_scalarised = np.max(Y_weighted, axis=1) + \
+            self.rho * Y_weighted.sum(axis=1)
         return Y_scalarised[:, None]
-    
+
     def mock_call(self, Y: np.ndarray, random_seed: int = 0):
         """
         Function that scalarizes the outputs using an augmented weighted Tchebycheff approach
@@ -210,14 +219,16 @@ class TargetExtractorFunction:
                 f'Number of objectives in Y values ({Y.shape[1]}) does not match '
                 f'the number of objectives in the target extractor ({self.num_objectives})')
         # Draw random weight vector
-        weights = random_weight_vector(k=self.num_objectives, rng=np.random.default_rng(random_seed))
+        weights = random_weight_vector(
+            k=self.num_objectives, rng=np.random.default_rng(random_seed))
         # Normalise samples
         Y_norm = normalize(Y, 'maxmin', lower=0, upper=1, anchor_lower=self.lower_anchor,
                            anchor_upper=self.upper_anchor)
         # Weight samples
         Y_weighted = Y_norm * weights
         # Scalarise samples using augmented Tchebycheff
-        Y_scalarised = np.max(Y_weighted, axis=1) + self.rho * Y_weighted.sum(axis=1)
+        Y_scalarised = np.max(Y_weighted, axis=1) + \
+            self.rho * Y_weighted.sum(axis=1)
         return Y_scalarised[:, None]
 
 
@@ -259,14 +270,14 @@ def random_weight_vector(k: int = 2, rng: np.random.Generator = None) -> np.ndar
 
 class NormMatern52(GPy.kern.Matern52):
     """Normalized Matern52 kernel variant.
-    
+
     This kernel is a Matern52 kernel with the points normalized by the sum of the absolute values of the coordinates.
     If the sum of the absolute values is zero, i.e., the point is the origin,
     the point is replaced by a point with all coordinates equal to 1.
-    
+
     For example, the input point (0.5, 0.5) is the same as the point (1, 1) or (π, π).
     """
-    
+
     def __init__(self, input_dim, variance=1, lengthscale=None, ARD=False, active_dims=None, name='NormalizedMatern52'):
         super().__init__(input_dim, variance, lengthscale, ARD, active_dims, name)
 

@@ -18,7 +18,8 @@ def phenotype_usability(supply, demand):
     supply = np.atleast_2d(supply)
     demand_3d = demand[:, :, None]
     demand_rotated = np.swapaxes(demand_3d, 1, 2)
-    usability = np.all(demand_rotated >= supply, axis=2).sum(axis=0) / usability_norm
+    usability = np.all(demand_rotated >= supply, axis=2).sum(
+        axis=0) / usability_norm
     return usability
 
 
@@ -33,7 +34,8 @@ def receivability(supply, demand):
     demand = np.atleast_2d(demand)
     supply_3d = supply[:, :, None]
     supply_rotated = np.swapaxes(supply_3d, 1, 2)
-    receivability = np.sum(supply_rotated <= demand, axis=(0, 2)) / receivability_norm
+    receivability = np.sum(supply_rotated <= demand,
+                           axis=(0, 2)) / receivability_norm
     return receivability
 
 
@@ -44,7 +46,8 @@ def sum_of_substitutions(supply, demand, weights=None):
     supply = np.atleast_2d(supply)
     demand_3d = demand[:, :, None]
     demand_rotated = np.swapaxes(demand_3d, 1, 2)
-    substitutions = ne.evaluate('sum((demand_rotated > supply) * weights, axis=2)') / substitution_norm
+    substitutions = ne.evaluate(
+        'sum((demand_rotated > supply) * weights, axis=2)') / substitution_norm
     return substitutions
 
 
@@ -54,7 +57,8 @@ def immunogenicity(supply, demand, risk):
     supply = np.atleast_2d(supply)
     demand_3d = demand[:, :, None]
     demand_rotated = np.swapaxes(demand_3d, 1, 2)
-    immunogenicity = ne.evaluate('sum((demand_rotated < supply) * risk, axis=2)') / risk_norm
+    immunogenicity = ne.evaluate(
+        'sum((demand_rotated < supply) * risk, axis=2)') / risk_norm
     return immunogenicity
 
 
@@ -94,9 +98,11 @@ def fifo_discount(remaining_shelf_life, max_life=35, reqs_dates=None, scd_pat=Fa
             discount = np.full((len_demand, discount.size), discount)
             discount[scd_pat] = 0
     else:
-        _remaining_shelf_life = remaining_shelf_life[None, :] - reqs_dates[:, None]
+        _remaining_shelf_life = remaining_shelf_life[None,
+                                                     :] - reqs_dates[:, None]
         discount = _fifo_discount(_remaining_shelf_life)
-        allocating_to_the_past = (remaining_shelf_life - max_life)[None, :] > reqs_dates[:, None]
+        allocating_to_the_past = (
+            remaining_shelf_life - max_life)[None, :] > reqs_dates[:, None]
         will_expire = _remaining_shelf_life < 1
         # discount[_shelf_life > max_life] = -1e17
         discount[allocating_to_the_past] = -1e24
@@ -108,12 +114,12 @@ def fifo_discount(remaining_shelf_life, max_life=35, reqs_dates=None, scd_pat=Fa
 
 def young_blood_penalty(unit_age, max_young_blood=14, reqs_dates=None, scd_pat=True):
     """Young blood/old blood penalties and constraints.
-    
+
     Adds a constraint so that blood that is not 'young blood' cannot be used
     for SCD patients.
     Sets penalties and bonuses so that older 'young blood' is used first
     up 7 days old, then between 7 and 14 days old, the penalties exponentially increase.
-    
+
     :param unit_age: age minus 1 of the unit in days.
     :param max_young_blood: maximum age of young blood in days.
     :param reqs_dates: dates of the requests.
@@ -144,7 +150,8 @@ def young_blood_penalty(unit_age, max_young_blood=14, reqs_dates=None, scd_pat=T
 def _fifo_discount(shelf_life):
     # discount = ne.evaluate('0.5 ** (shelf_life / 5)')
     max_abs = np.max(np.abs(shelf_life))
-    poss_shelf_lifes = np.hstack((np.arange(max_abs + 1), np.arange(-max_abs, 0)))
+    poss_shelf_lifes = np.hstack(
+        (np.arange(max_abs + 1), np.arange(-max_abs, 0)))
     shelf_life_lookups = 0.5 ** (poss_shelf_lifes / 5)
     discount = shelf_life_lookups[shelf_life.astype(int)]
     # discount = 0.5 ** (shelf_life / 5)
@@ -153,8 +160,10 @@ def _fifo_discount(shelf_life):
 
 def _young_blood_penalty(unit_age, a=7.686455, b=9.580724, c=0, d=1.1976):
     max_abs = np.max(np.abs(unit_age))
-    poss_unit_ages = np.hstack((np.arange(max_abs + 1), np.arange(-max_abs, 0)))
-    unit_age_lookups = (-1/a * poss_unit_ages + np.exp(poss_unit_ages - b) + c) * d
+    poss_unit_ages = np.hstack(
+        (np.arange(max_abs + 1), np.arange(-max_abs, 0)))
+    unit_age_lookups = (-1/a * poss_unit_ages +
+                        np.exp(poss_unit_ages - b) + c) * d
     penalty = unit_age_lookups[unit_age.astype(int)]
     return penalty
     # penalty = (-1/a * unit_age + np.exp(unit_age - b) + c) * d

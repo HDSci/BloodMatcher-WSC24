@@ -9,7 +9,8 @@ import scipy.stats as stats
 
 logger = logging.getLogger(__name__)
 
-main_func = 'EXPERIMENT_3'  # 'BAYES_OPT' | 'EXPERIMENT_3' | 'PRECOMPUTE' | 'MULTI_OBJECTIVE_BAYES_OPT'
+# 'BAYES_OPT' | 'EXPERIMENT_3' | 'PRECOMPUTE' | 'MULTI_OBJECTIVE_BAYES_OPT'
+main_func = 'EXPERIMENT_3'
 
 seed = 0xBE_BAD_BAE
 
@@ -28,7 +29,8 @@ anticipation = [True, False, False]
 # Anticipation and forecasting
 # anticipation = [True, True, True]
 
-pop_phen_configs = dict(dummy='data/bloodgroup_frequencies/ABD_old_dummy_demand.tsv')
+pop_phen_configs = dict(
+    dummy='data/bloodgroup_frequencies/ABD_old_dummy_demand.tsv')
 
 # Experiment 3
 dummy_demand = dict()

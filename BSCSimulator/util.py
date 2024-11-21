@@ -13,7 +13,8 @@ def create_pop_phenotype_table(output_file, donor=False):
     phen, freq_whi = bloodgroup_frequency(np.full(17, True), np.array([[1], [0]]), donor=donor)
     _, freq_bla = bloodgroup_frequency(np.full(17, True), np.array([[0], [1]]), donor=donor)
 
-    antigens = ["A", "B", "D", "C", "c", "E", "e", "K", "k", "Fya", "Fyb", "Jka", "Jkb", "M", "N", "S", "s"]
+    antigens = ["A", "B", "D", "C", "c", "E", "e", "K",
+                "k", "Fya", "Fyb", "Jka", "Jkb", "M", "N", "S", "s"]
 
     df = pd.DataFrame(phen, columns=antigens)
     df['Black_frequencies'] = freq_bla
@@ -52,7 +53,7 @@ def population_phenotype(config_file, black_pop_ratio):
 
 def dummy_population_phenotypes(config_file):
     """Create a dummy population phenotype table.
-    
+
     :param config_file: Path to the TSV file containing the major blood group distribution in the population.
     :return: A pandas dataframe containing the population phenotype table.
     """
@@ -69,16 +70,18 @@ def pad_abd_phenotypes(df, padding_length):
 
 def abd_usability(non_scd_freqs: ndarray, scd_requsts_ratio=330/3_500, black_pop_ratio_in_scd=1.0) -> ndarray:
     """Calculate the usability of ABD blood groups.
-    
+
     :param non_scd_freqs: A numpy array containing the frequencies of ABD blood groups in the non-SCD population.
     :param scd_requsts_ratio: The ratio of SCD units requested to the total number of units requested.
     :param float black_pop_ratio_in_scd: The ratio of black population in SCD patients.
     :return: A numpy array containing the usability of ABD blood groups.
     """
-    scd_phens = population_phenotype('data/bloodgroup_frequencies/usability_blood_groups.json', black_pop_ratio_in_scd)
+    scd_phens = population_phenotype(
+        'data/bloodgroup_frequencies/usability_blood_groups.json', black_pop_ratio_in_scd)
     scd_freqs = scd_phens.frequencies.to_numpy().flatten()
     # non_scd_freqs = np.array([])
-    all_freqs = (1 - scd_requsts_ratio) * non_scd_freqs + scd_requsts_ratio * scd_freqs
+    all_freqs = (1 - scd_requsts_ratio) * non_scd_freqs + \
+        scd_requsts_ratio * scd_freqs
     all_freqs = all_freqs / all_freqs.sum()
     compatibility = [[True] * 8,                       # O-
                      [False, True] * 4,                # O+
@@ -88,10 +91,10 @@ def abd_usability(non_scd_freqs: ndarray, scd_requsts_ratio=330/3_500, black_pop
                      [False] * 4 + [False, True] * 2,  # A+
                      [False] * 6 + [True] * 2,         # AB-
                      [False] * 6 + [False, True]       # AB+
-                    ]
+                     ]
     usability = [all_freqs[compatibility[i]].sum() for i in range(8)]
     return np.array(usability)
-                        
+
 
 def list_of_permutations(domain_list) -> list:
     prototype = []
@@ -144,7 +147,8 @@ def _normalize(Y, normalization_type='stats'):
             # A range of [-1, 1] is more natural for a zero-mean GP
             Y_norm = 2 * (Y_norm - 0.5)
     else:
-        raise ValueError('Unknown normalization type: {}'.format(normalization_type))
+        raise ValueError(
+            'Unknown normalization type: {}'.format(normalization_type))
 
     return Y_norm
 

@@ -40,9 +40,11 @@ class SimulationManager:
             self.seeds.append(_seed)
             rng = np.random.default_rng(_seed)
             # TODO: Set up Location or have it set up Supply & Demand.
-            clocks = [self.demand(), self.supply(), self.matching(), self.inventory()]
+            clocks = [self.demand(), self.supply(),
+                      self.matching(), self.inventory()]
             timing = [self.warm_up, self.horizon, self.cool_down]
-            rngs = {k: np.random.default_rng(_seed) for k in ['supply', 'demand']}
+            rngs = {k: np.random.default_rng(_seed)
+                    for k in ['supply', 'demand']}
             sim = Simulation(self.antigens, *clocks, *timing, clocks, rng, self.forecast_demand,
                              self.forecast_supply, self.forecasting, rngs=rngs)
             sim.computed_vars_file = None if self.precompute_infolder is None else os.path.join(
@@ -60,9 +62,11 @@ class SimulationManager:
             self.seeds.append(_seed)
             rng = np.random.default_rng(_seed)
             # TODO: Set up Location or have it set up Supply & Demand.
-            clocks = [self.demand(), self.supply(), self.matching(), self.inventory()]
+            clocks = [self.demand(), self.supply(),
+                      self.matching(), self.inventory()]
             timing = [self.warm_up, self.horizon, self.cool_down]
-            rngs = {k: np.random.default_rng(_seed) for k in ['supply', 'demand']}
+            rngs = {k: np.random.default_rng(_seed)
+                    for k in ['supply', 'demand']}
             sim = Simulation(self.antigens, *clocks, *timing, clocks, rng, self.forecast_demand,
                              self.forecast_supply, self.forecasting, rngs=rngs)
             sim.computed_vars_file = None if self.precompute_infolder is None else os.path.join(
@@ -70,7 +74,8 @@ class SimulationManager:
             _to_simulate.append(sim)
 
         p = Pool(workers)
-        _simulated = list(tqdm(p.imap(simulate, _to_simulate, chunksize=min(30, self.n // workers)), total=self.n))
+        _simulated = list(tqdm(p.imap(simulate, _to_simulate,
+                          chunksize=min(30, self.n // workers)), total=self.n))
         p.close()
         p.terminate()
         self.simulations = _simulated
@@ -80,10 +85,12 @@ class SimulationManager:
     def _pre_compute(self, i, seed):
         rng = np.random.default_rng(seed)
         # TODO: Set up Location or have it set up Supply & Demand.
-        clocks = [self.demand(), self.supply(), self.matching(), self.inventory()]
+        clocks = [self.demand(), self.supply(),
+                  self.matching(), self.inventory()]
         timing = [self.warm_up, self.horizon, self.cool_down]
         rngs = {k: np.random.default_rng(seed) for k in ['supply', 'demand']}
-        sim = Simulation(self.antigens, *clocks, *timing, clocks, rng, rngs=rngs)
+        sim = Simulation(self.antigens, *clocks, *
+                         timing, clocks, rng, rngs=rngs)
         sim.pre_compute_random_vars()
         time.sleep(0.001)
 
@@ -169,18 +176,25 @@ class SimulationManager:
             all_shorts.append(sim.stats['all_shortages'])
             comp_times.append(sim.computation_time)
         n = len(mismatch)
-        self.mismatches = np.mean(mismatch, axis=0), np.std(mismatch, axis=0) / np.sqrt(n)
+        self.mismatches = np.mean(mismatch, axis=0), np.std(
+            mismatch, axis=0) / np.sqrt(n)
         self.allo = np.mean(allo, axis=0), np.std(allo, axis=0) / np.sqrt(n)
         self.subs = np.mean(subs, axis=0), np.std(subs, axis=0) / np.sqrt(n)
         self.scd_shorts = np.mean(scd_shorts), np.std(scd_shorts) / np.sqrt(n)
-        self.stocks = np.mean(stocks, axis=0), np.std(stocks, axis=0) / np.sqrt(n)
-        self.abo_cm = np.mean(abo_cm, axis=0), np.std(abo_cm, axis=0) / np.sqrt(n)
-        self.abod_mm = np.mean(abod_mm, axis=0), np.std(abod_mm, axis=0) / np.sqrt(n)
-        self.pats_subs = np.mean(pats_subs, axis=0), np.std(pats_subs, axis=0) / np.sqrt(n)
+        self.stocks = np.mean(stocks, axis=0), np.std(
+            stocks, axis=0) / np.sqrt(n)
+        self.abo_cm = np.mean(abo_cm, axis=0), np.std(
+            abo_cm, axis=0) / np.sqrt(n)
+        self.abod_mm = np.mean(abod_mm, axis=0), np.std(
+            abod_mm, axis=0) / np.sqrt(n)
+        self.pats_subs = np.mean(pats_subs, axis=0), np.std(
+            pats_subs, axis=0) / np.sqrt(n)
         self.objs = np.array(objs)
         self.ages = np.mean(ages, axis=0), np.std(ages, axis=0) / np.sqrt(n)
-        self.phen_ages = np.mean(phen_ages, axis=0), np.std(phen_ages, axis=0) / np.sqrt(n)
-        self.scd_ages = np.mean(scd_ages, axis=0), np.std(scd_ages, axis=0) / np.sqrt(n)
+        self.phen_ages = np.mean(phen_ages, axis=0), np.std(
+            phen_ages, axis=0) / np.sqrt(n)
+        self.scd_ages = np.mean(scd_ages, axis=0), np.std(
+            scd_ages, axis=0) / np.sqrt(n)
         self.all_shorts = np.mean(all_shorts), np.std(all_shorts) / np.sqrt(n)
         self.computation_times = np.array(comp_times)
         self.failures.update({'num': self.n - n, 'seeds': fails})
@@ -191,7 +205,8 @@ class Simulation:
     def __init__(self, antigens, demand, supply, matching, inventory, warm_up, horizon, cool_down,
                  clocks=None, rng=None, forecast_demand=False, forecast_supply=False, forecasting=dict(),
                  rngs=dict()) -> None:
-        self.clocks = clocks if clocks is not None else [demand, supply, matching, inventory]
+        self.clocks = clocks if clocks is not None else [
+            demand, supply, matching, inventory]
         self.warm_up = warm_up
         self.horizon = horizon
         self.cool_down = cool_down
@@ -226,16 +241,19 @@ class Simulation:
             while self.time < self.horizon:
                 self.tick()
                 if self.time == 1:
-                    self.inventory.initialise_inventory(self.supply.supply, self.rngs.get('supply', self.rng))
-                donated_units = self.supply.supply(rng=self.rngs.get('supply', self.rng))
+                    self.inventory.initialise_inventory(
+                        self.supply.supply, self.rngs.get('supply', self.rng))
+                donated_units = self.supply.supply(
+                    rng=self.rngs.get('supply', self.rng))
                 self.inventory.add_to_store(donated_units)
                 self.inventory.measure_stock()
 
-                #TODO: This interface can stay the same in the line below
+                # TODO: This interface can stay the same in the line below
                 # But the returned array `new_requests` array should have
                 # two extra columns: one for location and one for patient type
                 # The same applies to `donated_units` array a few lines above
-                new_requests, abs_mask = self.demand.demand(rng=self.rngs.get('demand', self.rng))
+                new_requests, abs_mask = self.demand.demand(
+                    rng=self.rngs.get('demand', self.rng))
                 self.matching.receive_new_requests(new_requests, abs_mask)
                 self.matching.get_inventory(self.inventory)
                 forecasts = self.get_n_days_forecast()
@@ -247,7 +265,7 @@ class Simulation:
                 self.matching.push_update_to_inventory(self.inventory)
                 self.matching.remove_matched_requests()
                 self.matching.clear_forecasts()
-                
+
                 # np.savez('scratch/manual_tests/forecasting/last_day_forecast.npz',
                 #          donated_units=donated_units, new_requests=new_requests, abs_mask=abs_mask)
                 self.matching.track_unmatched_requests()
@@ -272,7 +290,7 @@ class Simulation:
         """
         Uses historical matches to measure mismatches, alloimmunisations, and substitutions.
         Assigns the results to `self.stats` dictionary.
-        
+
         Full list of statistics:
         - mismatches: total number of mismatches per antigen
         - cum_allo: cumulative expected alloimmunisation per antigen
@@ -289,18 +307,25 @@ class Simulation:
         - abod_mm: number of units from each major blood group (ABOD) given to each major blood group (SCD only)
         - pats_mm_counts: number of patients that received at least one D/ABO/ABOD substitution
         """
-        matched_demand = self.antigens.convert_to_binarray(self.matching.matches[:, 3])
-        matched_supply = self.antigens.convert_to_binarray(self.matching.matches[:, 4])
-        mismatches = self.matching.measure_mismatches(matched_demand, matched_supply)
-        cum_allo = self.matching.measure_cumulative_alloimmunisation(mismatches)
-        substitutions = self.matching.measure_substitutions(matched_demand, matched_supply)
+        matched_demand = self.antigens.convert_to_binarray(
+            self.matching.matches[:, 3])
+        matched_supply = self.antigens.convert_to_binarray(
+            self.matching.matches[:, 4])
+        mismatches = self.matching.measure_mismatches(
+            matched_demand, matched_supply)
+        cum_allo = self.matching.measure_cumulative_alloimmunisation(
+            mismatches)
+        substitutions = self.matching.measure_substitutions(
+            matched_demand, matched_supply)
         scd_shortages = self.demand.total_requested_units - self.matching.num_matches
         all_shortages = self.matching.all_shortages
         stocks = np.array(self.inventory.stock_levels)
-        o_type_stocks = self.inventory.mean_O_type_stock(start=self.warm_up, end=self.horizon - self.cool_down)
+        o_type_stocks = self.inventory.mean_O_type_stock(
+            start=self.warm_up, end=self.horizon - self.cool_down)
         o_type_stocks = np.append(o_type_stocks, o_type_stocks.sum())
         stocks_age = self.inventory.age_distribution
-        stocks_pheno_age = [np.array(dist) for dist in self.inventory.pheno_age_dist]
+        stocks_pheno_age = [np.array(dist)
+                            for dist in self.inventory.pheno_age_dist]
         expiries = self.inventory.expired.shape[0]
         abo_cm = self.matching.abo_cm_counts
         scd_unit_ages = self.matching.ages_given_to_scd
@@ -317,7 +342,6 @@ class Simulation:
                           scd_unit_ages=scd_unit_ages,
                           all_shortages=all_shortages, o_type_stocks=o_type_stocks,
                           abod_mm=abod_mm, pats_mm_counts=pats_mm_counts)
-        
 
     def pre_compute_random_vars(self):
         starting_inventory = None
@@ -328,11 +352,14 @@ class Simulation:
         while self.time < self.horizon:
             self.tick()
             if self.time == 1:
-                self.inventory.initialise_inventory(self.supply.supply, self.rngs.get('supply', self.rng))
+                self.inventory.initialise_inventory(
+                    self.supply.supply, self.rngs.get('supply', self.rng))
                 starting_inventory = self.inventory.store
-            donated_units = self.supply.supply(rng=self.rngs.get('supply', self.rng))
+            donated_units = self.supply.supply(
+                rng=self.rngs.get('supply', self.rng))
             units.append(donated_units)
-            new_requests, abs_mask = self.demand.demand(rng=self.rngs.get('demand', self.rng))
+            new_requests, abs_mask = self.demand.demand(
+                rng=self.rngs.get('demand', self.rng))
             requests.append(new_requests)
             requests_Abs.append(abs_mask)
             strides.append((len(donated_units), len(new_requests)))
@@ -348,7 +375,7 @@ class Simulation:
             self._loaded_vars = {k: v.copy() for k, v in temp.items()}
             temp.close()
         else:
-            self._loaded_vars = temp            
+            self._loaded_vars = temp
         self._loaded_vars_strides = self._loaded_vars['strides'].cumsum(axis=0)
 
     def _close_loaded_vars(self):
@@ -360,20 +387,19 @@ class Simulation:
                 pass
             finally:
                 self._loaded_vars = None
-                
 
     def get_n_days_forecast(self):
         if self._loaded_vars is None or self.time >= self.horizon:
             return
         n_units = self.forecast_supply_days
         n_requests = self.forecast_demand_days
-        
+
         start_units = self.time - 1
         end_units = min(self.horizon - 1, self.time - 1 + n_units)
         slice_start_units = self._loaded_vars_strides[start_units]
         slice_end_units = self._loaded_vars_strides[end_units]
         units = self._loaded_vars['units'][slice_start_units[0]:slice_end_units[0], :]
-        
+
         start_requests = self.time - 1
         end_requests = min(self.horizon - 1, self.time - 1 + n_requests)
         slice_start_requests = self._loaded_vars_strides[start_requests]
@@ -385,38 +411,43 @@ class Simulation:
     def _randomise_forecast(self, forecast):
         if forecast is None:
             return forecast
-        
+
         units, (requests, requests_Abs) = forecast
         u_shows = min(1, self.forecast_supply_shows)
         if u_shows < 1:
             tot = int(len(units) / u_shows)
             u_no_shows = tot - len(units)
-            random_extra_units = self._forecast_rng.choice(self._loaded_vars['units'][:,1], u_no_shows, replace=True)
+            random_extra_units = self._forecast_rng.choice(
+                self._loaded_vars['units'][:, 1], u_no_shows, replace=True)
             dates = np.arange(np.min(units[:, -1]), np.max(units[:, -1]) + 1)
-            dates = np.repeat(dates, int(len(random_extra_units) / len(dates) + 1))[:len(random_extra_units)]
-            ids = np.arange(np.max(units[:, 0]) + 1, np.max(units[:, 0]) + 1 + len(random_extra_units))
-            random_extra_units = np.hstack((ids[:, None], random_extra_units[:, None], dates[:, None]))
+            dates = np.repeat(dates, int(
+                len(random_extra_units) / len(dates) + 1))[:len(random_extra_units)]
+            ids = np.arange(
+                np.max(units[:, 0]) + 1, np.max(units[:, 0]) + 1 + len(random_extra_units))
+            random_extra_units = np.hstack(
+                (ids[:, None], random_extra_units[:, None], dates[:, None]))
             show_units = np.vstack((units, random_extra_units))
         else:
             show_units = units
         show_reqs = requests
         show_Abs = requests_Abs
-        
+
         if not self._forecast_supply:
             show_units = np.empty((0, units.shape[1]), dtype=units.dtype)
         if not self._forecast_demand:
             show_reqs = np.empty((0, requests.shape[1]), dtype=requests.dtype)
-            show_Abs = np.empty((0, requests_Abs.shape[1]), dtype=requests_Abs.dtype)
+            show_Abs = np.empty(
+                (0, requests_Abs.shape[1]), dtype=requests_Abs.dtype)
         return show_units, (show_reqs, show_Abs)
 
 
 def simulate(sim: Simulation) -> Simulation:
     """Simulate a single replication of the simulation.
-    
+
     Wrapper function for the `simulate` method of the `Simulation` class
     that allows for parallelisation.
     Inserts a 0.2 second pause before executing the simulation.
-    
+
     :param Simulation sim: simulation to run
     return Simulation: the same simulation object
     """

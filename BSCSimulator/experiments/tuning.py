@@ -41,7 +41,8 @@ class Evaluator:
         """
         fitness = np.zeros((X.shape[0], 1))
         for i, x in enumerate(X):
-            alloimmunisations = tuning(weights=x, replications=self.replications, **self.tuning_kwargs)
+            alloimmunisations = tuning(
+                weights=x, replications=self.replications, **self.tuning_kwargs)
             fitness[i] = alloimmunisations.sum()
         return fitness
 
@@ -65,7 +66,8 @@ class MOEvaluator:
         else:
             self.objective_directions = objective_directions
         directions_dict = {'MIN': 1, 'MAX': -1}
-        self.directions_multipliers = np.array([directions_dict[d] for d in self.objective_directions])
+        self.directions_multipliers = np.array(
+            [directions_dict[d] for d in self.objective_directions])
         if tuning_kwargs is None:
             tuning_kwargs = dict()
         self.tuning_kwargs = tuning_kwargs
@@ -127,7 +129,8 @@ def bayes_opt_tuning(
         root_now = datetime.datetime.now()
         root_folder_date = root_now.strftime('%Y%m%d')
         root_folder_time = root_now.strftime('%H%M')
-        folder = os.path.join('out/experiments/exp3/tuning', root_folder_date, root_folder_time, '')
+        folder = os.path.join('out/experiments/exp3/tuning',
+                              root_folder_date, root_folder_time, '')
         folder = os.path.realpath(folder)
         if os.path.exists(folder):
             folder_clash_count += 1
@@ -139,20 +142,24 @@ def bayes_opt_tuning(
             except OSError:
                 folder_clash_count += 1
                 time.sleep(20 * folder_clash_rng.random())
-    
+
     if folder_clash_count == folder_clash_max:
-        raise OSError(f'Could not create unique folder for tuning results after {folder_clash_max} attempts.')
-        
-    var_obj_names = ['immunogenicity', 'usability', 'substitutions', 'fifo', 'young_blood', 'alloimmunisations']
+        raise OSError(
+            f'Could not create unique folder for tuning results after {folder_clash_max} attempts.')
+
+    var_obj_names = ['immunogenicity', 'usability',
+                     'substitutions', 'fifo', 'young_blood', 'alloimmunisations']
     if variable_names is None:
         var_names = var_obj_names[:-1]
     else:
         var_names = variable_names
     if objective_name is None:
         objective_name = var_obj_names[-1:]
-    tuning_kwargs.update({'folder': folder, 'objectives_names': objective_name})
+    tuning_kwargs.update(
+        {'folder': folder, 'objectives_names': objective_name})
     # fixed_variables_mask = [name in fixed_variables.keys() for name in var_obj_names[:-1]]
-    all_variables_indices = {name: i for i, name in enumerate(var_obj_names[:-1])}
+    all_variables_indices = {name: i for i,
+                             name in enumerate(var_obj_names[:-1])}
     evaluator = MOEvaluator(replications, num_objectives=1, objective_directions=objective_directions,
                             tuning_kwargs=tuning_kwargs,
                             all_variables=all_variables_indices, fixed_variables=fixed_variables,
@@ -174,21 +181,23 @@ def bayes_opt_tuning(
         mean_function = None
     else:
         mean_function = None
-        
+
     iteration_chunks = min(iteration_chunks, num_iterations)
     iteration_chunk_size = num_iterations // iteration_chunks
     remaining_iterations = num_iterations % iteration_chunks
-    
+
     if remaining_iterations > 0:
-        iteration_chunks_list = [iteration_chunk_size] * iteration_chunks + [remaining_iterations]
+        iteration_chunks_list = [iteration_chunk_size] * \
+            iteration_chunks + [remaining_iterations]
     else:
         iteration_chunks_list = [iteration_chunk_size] * iteration_chunks
-    
+
     if normalized_kernel:
         kernel = NormMatern52(space.dimensionality, variance=1.0, ARD=True)
     else:
-        kernel = GPy.kern.Matern52(space.dimensionality, variance=1.0, ARD=True)
-        
+        kernel = GPy.kern.Matern52(
+            space.dimensionality, variance=1.0, ARD=True)
+
     X = X_init
     Y = Y_init
     for i in iteration_chunks_list:
@@ -208,19 +217,22 @@ def bayes_opt_tuning(
         # results = bo_loop.get_results()
         X = bo_loop.loop_state.X
         Y = bo_loop.loop_state.Y
-    
+
     results = bo_loop.get_results()
 
     results_df = pd.DataFrame(np.atleast_2d(
         np.hstack((results.minimum_location.flatten(), [results.minimum_value * evaluator.directions_multipliers[0]]))),
-                              columns=var_names + objective_name)
+        columns=var_names + objective_name)
 
-    points = np.hstack((bo_loop.loop_state.X, bo_loop.loop_state.Y * evaluator.directions_multipliers[0]))
+    points = np.hstack(
+        (bo_loop.loop_state.X, bo_loop.loop_state.Y * evaluator.directions_multipliers[0]))
     points_df = pd.DataFrame(points, columns=var_names + objective_name)
 
     prefix = datetime.datetime.now().strftime('%d_%H-%M')
-    results_df.to_csv(os.path.join(folder, prefix + 'tuning_results.tsv'), index=False, sep='\t')
-    points_df.to_csv(os.path.join(folder, prefix + 'tuning_points.tsv'), index=False, sep='\t')
+    results_df.to_csv(os.path.join(
+        folder, prefix + 'tuning_results.tsv'), index=False, sep='\t')
+    points_df.to_csv(os.path.join(folder, prefix +
+                     'tuning_points.tsv'), index=False, sep='\t')
 
 
 def unpack_previous_evaluations(
@@ -253,7 +265,7 @@ def unpack_previous_evaluations(
 def multi_objective_bayes_opt_tuning(
         init_points_count=25, num_iterations=50, X_init: np.ndarray = None, Y_init: np.ndarray = None,
         replications=10, num_objectives=2, variable_names: List = None, objective_names: List = None,
-        objective_directions: List = None, iteration_chunks : int = 5, normalized_kernel: bool = True,
+        objective_directions: List = None, iteration_chunks: int = 5, normalized_kernel: bool = True,
         tuning_kwargs: Dict = None, fixed_variables: Dict = None):
     """Multi-objective Bayesian optimization for tuning.
 
@@ -280,7 +292,8 @@ def multi_objective_bayes_opt_tuning(
         root_now = datetime.datetime.now()
         root_folder_date = root_now.strftime('%Y%m%d')
         root_folder_time = root_now.strftime('%H%M')
-        folder = os.path.join('out/experiments/exp3/tuning', root_folder_date, root_folder_time, '')
+        folder = os.path.join('out/experiments/exp3/tuning',
+                              root_folder_date, root_folder_time, '')
         folder = os.path.realpath(folder)
         if os.path.exists(folder):
             folder_clash_count += 1
@@ -292,12 +305,13 @@ def multi_objective_bayes_opt_tuning(
             except OSError:
                 folder_clash_count += 1
                 time.sleep(20 * folder_clash_rng.random())
-    
+
     if folder_clash_count == folder_clash_max:
-        raise OSError(f'Could not create unique folder for tuning results after {folder_clash_max} attempts.')
-    
+        raise OSError(
+            f'Could not create unique folder for tuning results after {folder_clash_max} attempts.')
+
     tuning_kwargs.update({'folder': folder})
-    
+
     var_obj_names = ['immunogenicity', 'usability', 'substitutions',
                      'fifo', 'young_blood', 'alloimmunisations', 'shortages']
     if variable_names is None:
@@ -309,7 +323,8 @@ def multi_objective_bayes_opt_tuning(
     else:
         obj_names = objective_names[:num_objectives]
     tuning_kwargs.update({'objectives_names': obj_names})
-    all_variables_indices = {name: i for i, name in enumerate(var_obj_names[:5])}
+    all_variables_indices = {name: i for i,
+                             name in enumerate(var_obj_names[:5])}
     evaluator = MOEvaluator(replications, num_objectives, objective_directions, tuning_kwargs,
                             all_variables=all_variables_indices, fixed_variables=fixed_variables,
                             variable_names=var_names)
@@ -325,19 +340,22 @@ def multi_objective_bayes_opt_tuning(
     iteration_chunks = min(iteration_chunks, num_iterations)
     iteration_chunk_size = num_iterations // iteration_chunks
     remaining_iterations = num_iterations % iteration_chunks
-    
+
     if remaining_iterations > 0:
-        iteration_chunks_list = [iteration_chunk_size] * iteration_chunks + [remaining_iterations]
+        iteration_chunks_list = [iteration_chunk_size] * \
+            iteration_chunks + [remaining_iterations]
     else:
         iteration_chunks_list = [iteration_chunk_size] * iteration_chunks
 
     if normalized_kernel:
         kernel = NormMatern52(space.dimensionality, variance=1.0, ARD=True)
     else:
-        kernel = GPy.kern.Matern52(space.dimensionality, variance=1.0, ARD=True)
-    
-    extractor = TargetExtractorFunction(random_seed=20230501, num_objectives=num_objectives, lower_anchor=0)
-    
+        kernel = GPy.kern.Matern52(
+            space.dimensionality, variance=1.0, ARD=True)
+
+    extractor = TargetExtractorFunction(
+        random_seed=20230501, num_objectives=num_objectives, lower_anchor=0)
+
     X = X_init
     Y_scalarized = extractor.mock_call(Y_init, 20230501)
     Y = Y_init
@@ -347,7 +365,7 @@ def multi_objective_bayes_opt_tuning(
             # Multiply first element by 1.001 and the last by 0.999
             # to prevent errors in GP normalizer
             Y_scalarized[0, is_same] *= 1.001
-            Y_scalarized[-1, is_same] *= 0.999           
+            Y_scalarized[-1, is_same] *= 0.999
         noise_var = Y_scalarized.var() * 0.01
         gpy_model = GPy.models.GPRegression(
             X, Y_scalarized, kernel,
@@ -357,7 +375,8 @@ def multi_objective_bayes_opt_tuning(
         gpy_model.likelihood.constrain_bounded(1e-9, 1e-6, warning=False)
         gpy_model.kern.lengthscale.constrain_bounded(1e-9, 1e6, warning=False)
 
-        bo_loop = MultiObjectiveBayesianOptimizationLoop(space, X, Y, model, targets_extractor=extractor)
+        bo_loop = MultiObjectiveBayesianOptimizationLoop(
+            space, X, Y, model, targets_extractor=extractor)
         stopping_condition = FixedIterationsStoppingCondition(i)
 
         bo_loop.run_loop(func, stopping_condition)
@@ -368,12 +387,16 @@ def multi_objective_bayes_opt_tuning(
     results = bo_loop.get_results()
 
     results_df = pd.DataFrame(
-        np.hstack((results.pareto_front_X, results.pareto_front_Y * evaluator.directions_multipliers)),
+        np.hstack((results.pareto_front_X, results.pareto_front_Y *
+                  evaluator.directions_multipliers)),
         columns=var_names + obj_names)
 
-    points = np.hstack((bo_loop.loop_state.X, bo_loop.loop_state.Y * evaluator.directions_multipliers))
+    points = np.hstack(
+        (bo_loop.loop_state.X, bo_loop.loop_state.Y * evaluator.directions_multipliers))
     points_df = pd.DataFrame(points, columns=var_names + obj_names)
 
     prefix = datetime.datetime.now().strftime('%d_%H-%M')
-    results_df.to_csv(os.path.join(folder, prefix + 'tuning_results.tsv'), index=False, sep='\t')
-    points_df.to_csv(os.path.join(folder, prefix + 'tuning_points.tsv'), index=False, sep='\t')
+    results_df.to_csv(os.path.join(
+        folder, prefix + 'tuning_results.tsv'), index=False, sep='\t')
+    points_df.to_csv(os.path.join(folder, prefix +
+                     'tuning_points.tsv'), index=False, sep='\t')

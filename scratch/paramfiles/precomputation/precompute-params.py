@@ -9,7 +9,8 @@ import scipy.stats as stats
 
 logger = logging.getLogger(__name__)
 
-main_func = 'PRECOMPUTE'  # 'BAYES_OPT' | 'EXPERIMENT_3' | 'PRECOMPUTE' | 'MULTI_OBJECTIVE_BAYES_OPT'
+# 'BAYES_OPT' | 'EXPERIMENT_3' | 'PRECOMPUTE' | 'MULTI_OBJECTIVE_BAYES_OPT'
+main_func = 'PRECOMPUTE'
 
 seed = 0xBE_BAD_BAE
 
@@ -78,4 +79,3 @@ bayes_opt = {
     'replications': replications,
     'num_objectives': 2,
 }
-
