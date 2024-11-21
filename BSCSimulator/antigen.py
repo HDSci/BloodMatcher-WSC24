@@ -12,7 +12,6 @@ DEFAULT_VECTOR_LENGTH = 2 ** 5
 
 class Antigens:
     population_frequencies = None
-    # TODO: Probably better to have this in the Demand class
     population_abd_usabilities = None
 
     def __init__(self, antigens: List, antigen_order=None, alloimmunisation_risk=None, rule=None,

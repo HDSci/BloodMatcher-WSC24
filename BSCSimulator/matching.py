@@ -76,8 +76,6 @@ class MatchingArea:
             (self.immediately_unmet_requests, unmet_requests))
 
     def remove_matched_requests(self):
-        # TODO: Parameterize whether partially satisfied requests are removed.
-        # Currently they are removed if at least a unit of blood supplied
         i = self.pending_requests[:, 4] < 0
         self.pending_requests = self.pending_requests[i]
         self.pr_allo_abs = self.pr_allo_abs[i]
@@ -102,7 +100,6 @@ class MatchingArea:
 
     def get_forecasts(self, units, requests):
         self.forecast_units = units.copy()
-        # TODO: This needs to be handled in a better way
         padding_shape = (requests[0].shape[0], 1)
         padding = np.zeros(padding_shape, dtype=int)
         self.forecast_requests = np.hstack((requests[0], padding))
@@ -217,8 +214,6 @@ class MatchingArea:
         abod_incompat = np.zeros(usab_diff.shape)
         abod_incompat[abod_incompat_indices] = 1e32
 
-        # TODO: Separate FIFO penalty from FIFO constraint
-        # TODO: Separate Young blood penalty from Young blood constraint
         core_fifo = np.abs(fifo) <= 1
         w = self.transport_matching_weights
         w_3_fifo = fifo * 1

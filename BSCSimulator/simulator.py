@@ -39,7 +39,6 @@ class SimulationManager:
                 _seed = _seed + 17
             self.seeds.append(_seed)
             rng = np.random.default_rng(_seed)
-            # TODO: Set up Location or have it set up Supply & Demand.
             clocks = [self.demand(), self.supply(),
                       self.matching(), self.inventory()]
             timing = [self.warm_up, self.horizon, self.cool_down]
@@ -61,7 +60,6 @@ class SimulationManager:
                 _seed = _seed + 17
             self.seeds.append(_seed)
             rng = np.random.default_rng(_seed)
-            # TODO: Set up Location or have it set up Supply & Demand.
             clocks = [self.demand(), self.supply(),
                       self.matching(), self.inventory()]
             timing = [self.warm_up, self.horizon, self.cool_down]
@@ -84,7 +82,6 @@ class SimulationManager:
 
     def _pre_compute(self, i, seed):
         rng = np.random.default_rng(seed)
-        # TODO: Set up Location or have it set up Supply & Demand.
         clocks = [self.demand(), self.supply(),
                   self.matching(), self.inventory()]
         timing = [self.warm_up, self.horizon, self.cool_down]
@@ -248,10 +245,6 @@ class Simulation:
                 self.inventory.add_to_store(donated_units)
                 self.inventory.measure_stock()
 
-                # TODO: This interface can stay the same in the line below
-                # But the returned array `new_requests` array should have
-                # two extra columns: one for location and one for patient type
-                # The same applies to `donated_units` array a few lines above
                 new_requests, abs_mask = self.demand.demand(
                     rng=self.rngs.get('demand', self.rng))
                 self.matching.receive_new_requests(new_requests, abs_mask)

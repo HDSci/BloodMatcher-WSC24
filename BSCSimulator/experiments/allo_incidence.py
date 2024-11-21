@@ -170,9 +170,6 @@ def exp3(rules, anticipation=False, seed=0xBE_BAD_BAE, cpus=1, replications=60, 
         antigens.allo_risk = immuno[antigens.antigen_index[3:]].to_numpy(
         ).flatten()
 
-        # TODO: Demand & Supply both need to take in locations and the demand/supply for each location.
-        # For the former, it will also need patient groups at each location.
-        # Otherwise, a Location object will be needed to set up Demand & Supply.
         def demand():
             return Demand(antigens, patient_data, appointments, units_per_appointment,
                           antigen_string=False, dummy_data=dummy_data, dummy_extra_demand=_excess_supply)
@@ -187,7 +184,6 @@ def exp3(rules, anticipation=False, seed=0xBE_BAD_BAE, cpus=1, replications=60, 
                 young_blood_constraint=kwargs.get('yb_constraint', True),
                 substitution_penalty_parity=kwargs.get('substitution_weight_equal', True))
 
-        # TODO: Make sure `watched_phenotypes` starts with O- and O+
         def inventory():
             return Inventory(
                 kwargs.get('max_age', 35),
@@ -304,7 +300,6 @@ def exp3(rules, anticipation=False, seed=0xBE_BAD_BAE, cpus=1, replications=60, 
     print(f'\nThe output folder is at {folder}')
 
 
-# TODO: Refactor to accommodate inclusion of locations and patient groups
 def precompute_exp3(
         rules, anticipation=False, seed=0xBE_BAD_BAE, cpus=1, pop_phen_configs: dict = None, replications=200,
         folder=None, **kwargs):
@@ -398,7 +393,6 @@ def precompute_exp3(
     print(f'\nThe output folder is at {folder}')
 
 
-# TODO: Refactor to accommodate inclusion of locations and patient groups
 def tuning(rule='Extended', seed=0xBE_BAD_BAE, replications=10, cpus=10, weights: np.ndarray = None,
            pop_phen_configs: dict = None, num_objectives=1, anticipation=True, **kwargs):
     """Tuning of the simulation parameters

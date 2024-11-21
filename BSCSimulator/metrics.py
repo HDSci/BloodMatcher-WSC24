@@ -84,9 +84,6 @@ def major_antigen_substitution(supply, demand, population=False, pop_frequencies
     return mas
 
 
-# TODO: Make calculation of age constraints separate from the core FIFO penalty
-# I.e., calculating and constraining forecasted units so that they cannot be used
-# earlier than they are produced should be done in a separate function.
 def fifo_discount(remaining_shelf_life, max_life=35, reqs_dates=None, scd_pat=False):
     if reqs_dates is None:
         discount = _fifo_discount(remaining_shelf_life)

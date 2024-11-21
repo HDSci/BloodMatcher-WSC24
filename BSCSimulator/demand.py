@@ -3,7 +3,6 @@ import numpy as np
 
 class Demand:
 
-    # TODO: Refactor to take in locations and the demand for each patient group in each location.
     def __init__(self, antigens=None, data=None, num_requests_rv=None, num_units_rv=None, antigen_string=True,
                  dummy_data=None, dummy_extra_demand=0):
         self.antigens = antigens
