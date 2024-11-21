@@ -1,0 +1,78 @@
+{
+    "ABO": {
+        "filename": "data/bloodgroup_frequencies/AB.tsv",
+        "antigens": [
+            "A",
+            "B"
+        ],
+        "include": [
+            true,
+            true
+        ]
+    },
+    "Rh": {
+        "filename": "data/bloodgroup_frequencies/Rh.tsv",
+        "antigens": [
+            "D",
+            "C",
+            "c",
+            "E",
+            "e"
+        ],
+        "include": [
+            true,
+            true,
+            true,
+            true,
+            true
+        ]
+    },
+    "Kell": {
+        "filename": "data/bloodgroup_frequencies/K.tsv",
+        "antigens": [
+            "K",
+            "k"
+        ],
+        "include": [
+            true,
+            true
+        ]
+    },
+    "Duffy": {
+        "filename": "data/bloodgroup_frequencies/Fy.tsv",
+        "antigens": [
+            "Fya",
+            "Fyb"
+        ],
+        "include": [
+            true,
+            true
+        ]
+    },
+    "Kidd": {
+        "filename": "data/bloodgroup_frequencies/Jk.tsv",
+        "antigens": [
+            "Jka",
+            "Jkb"
+        ],
+        "include": [
+            true,
+            true
+        ]
+    },
+    "MNS": {
+        "filename": "data/bloodgroup_frequencies/MNS.tsv",
+        "antigens": [
+            "M",
+            "N",
+            "S",
+            "s"
+        ],
+        "include": [
+            true,
+            true,
+            true,
+            true
+        ]
+    }
+}

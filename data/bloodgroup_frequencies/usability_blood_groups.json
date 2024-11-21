@@ -1,0 +1,30 @@
+{
+    "ABO": {
+        "filename": "data/bloodgroup_frequencies/AB.tsv",
+        "antigens": [
+            "A",
+            "B"
+        ],
+        "include": [
+            true,
+            true
+        ]
+    },
+    "Rh": {
+        "filename": "data/bloodgroup_frequencies/Rh.tsv",
+        "antigens": [
+            "D",
+            "C",
+            "c",
+            "E",
+            "e"
+        ],
+        "include": [
+            true,
+            false,
+            false,
+            false,
+            false
+        ]
+    }
+}
