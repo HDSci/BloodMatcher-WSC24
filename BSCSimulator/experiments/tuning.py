@@ -72,9 +72,7 @@ class MOEvaluator:
             tuning_kwargs = dict()
         self.tuning_kwargs = tuning_kwargs
         self.all_variables = all_variables
-        # self.num_variables = len(all_variables)
         self.fixed_variables = fixed_variables
-        # self.fixed_variables_mask = fixed_variables_mask
         self.variable_names = variable_names
 
     def evaluate(self, X: np.ndarray) -> np.ndarray:
@@ -157,7 +155,6 @@ def bayes_opt_tuning(
         objective_name = var_obj_names[-1:]
     tuning_kwargs.update(
         {'folder': folder, 'objectives_names': objective_name})
-    # fixed_variables_mask = [name in fixed_variables.keys() for name in var_obj_names[:-1]]
     all_variables_indices = {name: i for i,
                              name in enumerate(var_obj_names[:-1])}
     evaluator = MOEvaluator(replications, num_objectives=1, objective_directions=objective_directions,
@@ -167,7 +164,6 @@ def bayes_opt_tuning(
     space = ParameterSpace([ContinuousParameter(w, 0, 1) for w in var_names])
 
     lhs_design = LatinDesign(space)
-    # init_points_count = 25
     if X_init is None:
         X_init = lhs_design.get_samples(init_points_count)
         Y_init = evaluator.evaluate(X_init)
@@ -210,11 +206,9 @@ def bayes_opt_tuning(
         gpy_model.kern.lengthscale.constrain_bounded(1e-9, 1e6, warning=False)
 
         bo_loop = BayesianOptimizationLoop(model=model, space=space)
-        # num_iterations = 50
         stopping_condition = FixedIterationsStoppingCondition(i)
 
         bo_loop.run_loop(func, stopping_condition)
-        # results = bo_loop.get_results()
         X = bo_loop.loop_state.X
         Y = bo_loop.loop_state.Y
 
@@ -328,7 +322,6 @@ def multi_objective_bayes_opt_tuning(
     evaluator = MOEvaluator(replications, num_objectives, objective_directions, tuning_kwargs,
                             all_variables=all_variables_indices, fixed_variables=fixed_variables,
                             variable_names=var_names)
-    # obj_index_names = {name: i for i, name in enumerate(obj_names)}
     space = ParameterSpace([ContinuousParameter(w, 0, 1) for w in var_names])
 
     lhs_design = LatinDesign(space)

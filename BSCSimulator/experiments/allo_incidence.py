@@ -130,7 +130,6 @@ def exp3(rules, anticipation=False, seed=0xBE_BAD_BAE, cpus=1, replications=60, 
         'dummy', 'data/bloodgroup_frequencies/ABD_dummy_demand.tsv'))
     dummy_data = pad_abd_phenotypes(non_scd_frequencies, len(ANTIGENS) - 3)
     dummy_data = kwargs.get('dummy_data', dummy_data)
-    # allo_ab_data = load_alloantibodies()
     allo_ab_data = load_alloantibodies(kwargs.get(
         'ab_datafile', 'data/antibody_frequencies/bayes_alloAb_frequencies.tsv'))
     data = (donor_data, patient_data)
@@ -218,10 +217,6 @@ def exp3(rules, anticipation=False, seed=0xBE_BAD_BAE, cpus=1, replications=60, 
         df = pd.DataFrame(stacked, columns=ANTIGENS, index=index)
 
         now = datetime.datetime.now()
-        # folder = os.path.join(f'out/experiments/exp{exp}', root_folder_date, root_folder_time, '')
-        # folder = os.path.realpath(folder)
-        # folder = os.path.realpath(f'out/experiments/exp{exp}/' + now.strftime('%Y%m%d'))
-        # os.makedirs(folder, exist_ok=True)
 
         file = os.path.join(folder, rule + now.strftime('%H-%M_output.tsv'))
 
@@ -421,7 +416,6 @@ def tuning(rule='Extended', seed=0xBE_BAD_BAE, replications=10, cpus=10, weights
         pop_phen_configs.get('dummy', 'data/bloodgroup_frequencies/ABD_dummy_demand.tsv'))
     dummy_data = pad_abd_phenotypes(non_scd_frequencies, len(ANTIGENS) - 3)
     dummy_data = kwargs.get('dummy_data', dummy_data)
-    # allo_ab_data = load_alloantibodies()
     allo_ab_data = load_alloantibodies(kwargs.get(
         'ab_datafile', 'data/antibody_frequencies/bayes_alloAb_frequencies.tsv'))
     data = (donor_data, patient_data)
@@ -513,7 +507,6 @@ def tuning(rule='Extended', seed=0xBE_BAD_BAE, replications=10, cpus=10, weights
     folder = kwargs.get('folder', os.path.join(
         'out/experiments/exp3/tuning', root_folder_date, root_folder_time, ''))
     folder = os.path.realpath(folder)
-    # folder = os.path.realpath('out/experiments/exp3/tuning/' + now.strftime('%Y%m%d'))
     os.makedirs(folder, exist_ok=True)
 
     file = os.path.join(folder, rule + now.strftime('%d_%H-%M_output.tsv'))
@@ -521,7 +514,6 @@ def tuning(rule='Extended', seed=0xBE_BAD_BAE, replications=10, cpus=10, weights
     df.to_csv(file, sep='\t')
     print(f'Output written to {file}')
 
-    # objectives_values = manager.objs
     obj_cols = ['alloimmunisations',
                 'scd_shortages', 'expiries', 'all_shortages']
     obj_stock_cols = ['O_neg_level', 'O_pos_level', 'O_level']

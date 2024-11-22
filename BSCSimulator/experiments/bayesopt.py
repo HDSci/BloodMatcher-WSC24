@@ -85,7 +85,6 @@ class MultiObjectiveBayesianOptimizationLoop(OuterLoop):
             candidate_point_calculator = LocalPenalizationPointCalculator(
                 log_acquisition, acquisition_optimizer, model, space, batch_size)
 
-        # extra_objectives = {k: Y_init[:, v:v+1] for k, v in extra_objectives_names.items()}
         loop_state = create_loop_state(X_init, Y_init)
 
         super().__init__(candidate_point_calculator, model_updaters, loop_state)
@@ -255,7 +254,6 @@ def random_weight_vector(k: int = 2, rng: np.random.Generator = None) -> np.ndar
             _draw = rng.integers(s + 1)
         except AttributeError:
             _draw = rng.randint(s + 1)
-        # print(_draw)
         if _draw + _sum <= s:
             _sum += _draw
             _lambda.append(_draw)

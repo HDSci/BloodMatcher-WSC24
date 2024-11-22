@@ -135,7 +135,6 @@ class MatchingArea:
         self._todays_matches = np.array(matches)
         return matches
 
-    # @jit(nopython=False)
     def transport_matching(self, shelf_life=35, max_young_blood=14, solver=None):
         matches = []
         if self.pending_requests.size == 0:
@@ -218,14 +217,10 @@ class MatchingArea:
         w = self.transport_matching_weights
         w_3_fifo = fifo * 1
         w_3_fifo[core_fifo] *= w[3]
-        # w_3 = w[3] * core_fifo
-        # w_3[w_3 == 0] = 1
         core_old_blood = old_blood <= young_blood_penalty(
             np.array([max_young_blood - 1]), max_young_blood)[0, 0]
         w_4_old_blood = old_blood * self.yb_constraint
         w_4_old_blood[core_old_blood] *= w[4]
-        # w_4 = w[4] * core_old_blood
-        # w_4[w_4 == 0] = 1
 
         if self.matching_rule != 'ABOD':
             cost_matrix = w[0] * imm + w[2] * subst + w[1] * \
@@ -284,7 +279,6 @@ class MatchingArea:
                         raise RuntimeError(
                             'Transport solver did not find optimum.') from e
         elif solver.lower() == 'ortools':
-            # plan = self._ortools_mincostflow(units_hist, reqs_hist, cm.T, cost_matrix.T)
             plan = mincostflow(units_hist, reqs_hist, cm.T, cost_matrix.T)
             _plan = plan[:num_t_units, :num_t_reqs].T
             assert not np.any(
@@ -297,7 +291,6 @@ class MatchingArea:
         else:
             raise ValueError(f'Unknown solver {solver}.')
 
-        # _plan = plan[:num_units, :num_reqs].T
         i = np.arange(_plan.size).reshape(_plan.shape)
         i_match = i[_plan > 0]
         di = i_match % num_t_units

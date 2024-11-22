@@ -117,12 +117,6 @@ class SimulationManager:
                     _seed = _seed + 17
                 self.seeds.append(_seed)
                 outs = self._pre_compute(i, _seed)
-                # rng = np.random.default_rng(_seed)
-                # clocks = [self.demand(), self.supply(), self.matching(), self.inventory()]
-                # timing = [self.warm_up, self.horizon, self.cool_down]
-                # sim = Simulation(self.antigens, *clocks, *timing, clocks, rng)
-                # sim.pre_compute_random_vars()
-                # self.simulations.append(sim)
         return self.simulations
 
     def statistics(self):
@@ -259,8 +253,9 @@ class Simulation:
                 self.matching.remove_matched_requests()
                 self.matching.clear_forecasts()
 
-                # np.savez('scratch/manual_tests/forecasting/last_day_forecast.npz',
-                #          donated_units=donated_units, new_requests=new_requests, abs_mask=abs_mask)
+                # if self.time == self.horizon:
+                #     np.savez('scratch/manual_tests/forecasting/last_day_forecast.npz',
+                #              donated_units=donated_units, new_requests=new_requests, abs_mask=abs_mask)
                 self.matching.track_unmatched_requests()
                 self.inventory.remove_expired_units()
                 if self.warm_up == self.time:

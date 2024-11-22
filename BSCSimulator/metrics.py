@@ -101,7 +101,6 @@ def fifo_discount(remaining_shelf_life, max_life=35, reqs_dates=None, scd_pat=Fa
         allocating_to_the_past = (
             remaining_shelf_life - max_life)[None, :] > reqs_dates[:, None]
         will_expire = _remaining_shelf_life < 1
-        # discount[_shelf_life > max_life] = -1e17
         discount[allocating_to_the_past] = -1e24
         discount[will_expire] = -1e17
         if np.any(scd_pat):
@@ -145,13 +144,11 @@ def young_blood_penalty(unit_age, max_young_blood=14, reqs_dates=None, scd_pat=T
 
 
 def _fifo_discount(shelf_life):
-    # discount = ne.evaluate('0.5 ** (shelf_life / 5)')
     max_abs = np.max(np.abs(shelf_life))
     poss_shelf_lifes = np.hstack(
         (np.arange(max_abs + 1), np.arange(-max_abs, 0)))
     shelf_life_lookups = 0.5 ** (poss_shelf_lifes / 5)
     discount = shelf_life_lookups[shelf_life.astype(int)]
-    # discount = 0.5 ** (shelf_life / 5)
     return discount
 
 
@@ -163,8 +160,6 @@ def _young_blood_penalty(unit_age, a=7.686455, b=9.580724, c=0, d=1.1976):
                         np.exp(poss_unit_ages - b) + c) * d
     penalty = unit_age_lookups[unit_age.astype(int)]
     return penalty
-    # penalty = (-1/a * unit_age + np.exp(unit_age - b) + c) * d
-    # penalty = ne.evaluate('(-1/a * shelf_life + exp(shelf_life - b) + c) * d')
 
 
 if __name__ == "__main__":
