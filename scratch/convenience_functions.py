@@ -124,27 +124,6 @@ def objectives_stats_comparison_chart(files: dict, baseline: str, figsize=(12, 8
     return fig, axs
 
 
-def antigens():
-    from BSCSimulator.antigen import Antigens
-    from BSCSimulator.experiments.allo_incidence import (ANTIGENS,
-                                                         abd_usability,
-                                                         load_alloantibodies,
-                                                         load_immunogenicity,
-                                                         load_rule_sets)
-
-    matching_antigens = load_rule_sets(
-        'BSCSimulator/experiments/matching_rules.json')['MATCHING_RULES']['Extended']['antigen_set']
-    alloantibodies = load_alloantibodies()
-    immuno = load_immunogenicity()
-
-    Antigens.population_abd_usabilities = abd_usability()
-    antigens = Antigens(ANTIGENS, rule=matching_antigens,
-                        allo_Abs=alloantibodies.flatten())
-    antigens.allo_risk = immuno[antigens.antigen_index[3:]].to_numpy(
-    ).flatten()
-    return antigens
-
-
 def exp2_figs(abod, limited, extended, prob_neg_phen=1, figsize=None, labels=['ABOD', 'Limited', 'Extended'],
               colours=['C0', 'C1', 'C2'], ylabels=None, pdfs=None, skip_plots=False):
     """Figures for Experiment 2
@@ -616,34 +595,6 @@ def summarise_abo_mixed_allocations(abo_mixed_allocations: pd.DataFrame) -> pd.D
         col_vals = [sum(mean_values), np.sqrt(np.square(std_err_values).sum())]
         data.update({f'{combo[0]} to {combo[1]}': col_vals})
     return pd.DataFrame(data, index=['Mean', 'Std. Err.'])
-
-
-def usability_difference_matrix():
-    from BSCSimulator.util import dummy_population_phenotypes, abd_usability
-
-    non_scd_frequencies = dummy_population_phenotypes(
-        'data/bloodgroup_frequencies/ABD_old_dummy_demand.tsv')
-    usability = abd_usability(
-        non_scd_frequencies.frequencies.to_numpy(),
-        330/3500, 1.0)
-    usability_diff = usability[:, None] - usability
-    compatibility = [[True] * 8,                       # O-
-                     [False, True] * 4,                # O+
-                     [False, False, True, True] * 2,   # B-
-                     [False, False, False, True] * 2,  # B+
-                     [False] * 4 + [True] * 4,         # A-
-                     [False] * 4 + [False, True] * 2,  # A+
-                     [False] * 6 + [True] * 2,         # AB-
-                     [False] * 6 + [False, True]       # AB+
-                     ]
-    compatibility = np.array(compatibility)
-    usability_diff[~compatibility] = np.nan
-    blood_groups = ['O-', 'O+', 'B-', 'B+', 'A-', 'A+', 'AB-', 'AB+']
-    usability_diff_matrix = pd.DataFrame(usability_diff,
-                                         columns=[
-                                             f'to {bg}' for bg in blood_groups],
-                                         index=blood_groups)
-    return usability_diff_matrix
 
 
 def avg_stock_composition(rules, rule_files, donations=None,
