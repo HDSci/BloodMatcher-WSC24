@@ -649,8 +649,6 @@ def usability_difference_matrix():
 def avg_stock_composition(rules, rule_files, donations=None,
                           figsize=(12, 5), dpi=200, ncol=4, bbox_to_anchor=(0.5, -0.12),
                           pdf=None):
-    import matplotlib.ticker as mtick
-
     blood_grps = ['O-', 'O+', 'B-', 'B+', 'A-', 'A+', 'AB-', 'AB+']
     if donations is None:
         donations = np.array([14.6, 36.2, 2.8, 7.8, 7.8, 28.4, 0.6, 1.8])
