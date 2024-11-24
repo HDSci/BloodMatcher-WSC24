@@ -4,6 +4,7 @@ from typing import List
 import numpy as np
 from numpy import ndarray
 
+
 class Individual:
     def __init__(self, x_bounds: ndarray, x: ndarray, y: ndarray, c: ndarray):
         """
@@ -71,7 +72,7 @@ class Individual:
     def to_numpy(self, include_constraints=False):
         """
         Converts the ``Individual`` object to a numpy array.
-        
+
         :param include_constraints: If set to True, the constraints are also included in the returned array.
         :return: Numpy array of shape (1, n_vars + n_obj) if ``include_constraints`` is False, else (1, n_vars + n_obj + n_cons).
         """
@@ -79,17 +80,15 @@ class Individual:
             return np.hstack((self.variables, self.objectives, self.constraints))[None, :]
         else:
             return np.hstack((self.variables, self.objectives))[None, :]
-    
+
     def __copy__(self):
         ones = np.ones(shape=(1, 2))
         new_one = Individual(ones, ones, ones, ones)
         new_one.__dict__.update(self.__dict__.copy())
         return new_one
-    
+
     def __str__(self):
         return f"Individual(x={self.variables}, y={self.objectives}, c={self.constraints})"
-    
+
     def __repr__(self):
         return self.__str__()
-    
-    

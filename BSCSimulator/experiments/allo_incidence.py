@@ -67,12 +67,13 @@ def load_initial_age_distribution(filename: str = 'data/inventory/inital_age_dis
     try:
         df = pd.read_csv(filename, sep='\t')
     except (FileNotFoundError, ValueError):
-        logger.warning(f'Could not load initial age distribution data from {filename}.')
+        logger.warning(
+            f'Could not load initial age distribution data from {filename}.')
         df = None
     return df
 
 
-def exp3(rules, anticipation=False, seed=0xBE_BAD_BAE, cpus=1, replications=60, weights=None, pop_phen_configs:dict=None, **kwargs):
+def exp3(rules, anticipation=False, seed=0xBE_BAD_BAE, cpus=1, replications=60, weights=None, pop_phen_configs: dict = None, **kwargs):
     """Experiment 3 - Six-week simulation
 
     :param rules:
@@ -83,7 +84,7 @@ def exp3(rules, anticipation=False, seed=0xBE_BAD_BAE, cpus=1, replications=60, 
     """
     start_time = time.time()
     start_datetime = datetime.datetime.now().strftime('%Y%m%d-%H-%M')
-    
+
     folder_clash = True
     folder_clash_count = 0
     folder_clash_max = 100
@@ -92,9 +93,11 @@ def exp3(rules, anticipation=False, seed=0xBE_BAD_BAE, cpus=1, replications=60, 
         root_now = datetime.datetime.now()
         root_folder_date = root_now.strftime('%Y%m%d')
         root_folder_time = root_now.strftime('%H%M')
-        exp: str = '3' if kwargs.get('exp2', None) is None else kwargs.get('exp2', '2')
-        
-        folder = os.path.join(f'out/experiments/exp{exp}', root_folder_date, root_folder_time, '')
+        exp: str = '3' if kwargs.get(
+            'exp2', None) is None else kwargs.get('exp2', '2')
+
+        folder = os.path.join(
+            f'out/experiments/exp{exp}', root_folder_date, root_folder_time, '')
         folder = os.path.realpath(folder)
         if os.path.exists(folder):
             folder_clash_count += 1
@@ -106,9 +109,10 @@ def exp3(rules, anticipation=False, seed=0xBE_BAD_BAE, cpus=1, replications=60, 
             except OSError:
                 folder_clash_count += 1
                 time.sleep(20 * folder_clash_rng.random())
-            
+
     if folder_clash_count == folder_clash_max:
-        raise OSError(f'Could not create unique output folder after {folder_clash_max} attempts.')    
+        raise OSError(
+            f'Could not create unique output folder after {folder_clash_max} attempts.')
 
     print(f'\n###\nStarting Experiment {exp} at {start_datetime} with rules:')
     for rule in rules:
@@ -116,7 +120,8 @@ def exp3(rules, anticipation=False, seed=0xBE_BAD_BAE, cpus=1, replications=60, 
     print()
     if pop_phen_configs is None:
         pop_phen_configs = dict()
-    matching_rules = load_rule_sets('BSCSimulator/experiments/matching_rules.json')['MATCHING_RULES']
+    matching_rules = load_rule_sets(
+        'BSCSimulator/experiments/matching_rules.json')['MATCHING_RULES']
     donor_data = population_phenotype(pop_phen_configs.get(
         'donor', 'data/bloodgroup_frequencies/blood_groups_donors.json'), 0.01)
     patient_data = population_phenotype(pop_phen_configs.get(
@@ -125,42 +130,45 @@ def exp3(rules, anticipation=False, seed=0xBE_BAD_BAE, cpus=1, replications=60, 
         'dummy', 'data/bloodgroup_frequencies/ABD_dummy_demand.tsv'))
     dummy_data = pad_abd_phenotypes(non_scd_frequencies, len(ANTIGENS) - 3)
     dummy_data = kwargs.get('dummy_data', dummy_data)
-    # allo_ab_data = load_alloantibodies()
-    allo_ab_data = load_alloantibodies(kwargs.get('ab_datafile', 'data/antibody_frequencies/bayes_alloAb_frequencies.tsv'))
+    allo_ab_data = load_alloantibodies(kwargs.get(
+        'ab_datafile', 'data/antibody_frequencies/bayes_alloAb_frequencies.tsv'))
     data = (donor_data, patient_data)
     immuno = load_immunogenicity()
-    init_age_dist = load_initial_age_distribution(kwargs.get('initial_age_dist', None))
-    pre_compute_folder = os.path.realpath(kwargs.get('pre_compute_folder', f'out/experiments/exp{exp}/precompute/'))
+    init_age_dist = load_initial_age_distribution(
+        kwargs.get('initial_age_dist', None))
+    pre_compute_folder = os.path.realpath(kwargs.get(
+        'pre_compute_folder', f'out/experiments/exp{exp}/precompute/'))
 
     for rule in rules:
         matching_antigens = matching_rules[rule]['antigen_set']
 
         appointments = kwargs.get('appointments', randint(33, 34))
-        units_per_appointment = kwargs.get('units_per_appointment', randint(10, 11))
+        units_per_appointment = kwargs.get(
+            'units_per_appointment', randint(10, 11))
         stock = kwargs.get('stock', randint(3500, 3501))
         _excess_supply = kwargs.get('excess_supply', 3500 - 33 * 10)
 
-        # unpack warm_up, horizon, cool_down from kwargs if present else use defaults   
+        # unpack warm_up, horizon, cool_down from kwargs if present else use defaults
         warm_up = kwargs.get('warm_up', 7 * 6 * 4)  # 4 weeks
         horizon = kwargs.get('horizon', 7 * 6 * 5)  # 5 weeks
         cool_down = kwargs.get('cool_down', 0)  # 0 weeks
-        
+
         forecasting = kwargs.get('forecasting', None)
 
         if isinstance(anticipation, bool):
             _anticipation = [anticipation and rule == 'Extended'] * 3
         else:
-            _anticipation = [antn and rule == 'Extended' for antn in anticipation]
+            _anticipation = [antn and rule ==
+                             'Extended' for antn in anticipation]
 
         Antigens.population_abd_usabilities = abd_usability(
             non_scd_frequencies.frequencies.to_numpy(),
             kwargs.get('scd_requests_ratio', 330/3500), 1.0)
-        antigens = Antigens(ANTIGENS, rule=matching_antigens, allo_Abs=allo_ab_data.values.flatten())
-        antigens.allo_risk = immuno[antigens.antigen_index[3:]].to_numpy().flatten()
+        antigens = Antigens(ANTIGENS, rule=matching_antigens,
+                            allo_Abs=allo_ab_data.values.flatten())
+        antigens.allo_risk = immuno[antigens.antigen_index[3:]].to_numpy(
+        ).flatten()
 
-        # TODO: Demand & Supply both need to take in locations and the demand/supply for each location.
-        # For the former, it will also need patient groups at each location.
-        # Otherwise, a Location object will be needed to set up Demand & Supply.
         def demand():
             return Demand(antigens, patient_data, appointments, units_per_appointment,
                           antigen_string=False, dummy_data=dummy_data, dummy_extra_demand=_excess_supply)
@@ -175,13 +183,14 @@ def exp3(rules, anticipation=False, seed=0xBE_BAD_BAE, cpus=1, replications=60, 
                 young_blood_constraint=kwargs.get('yb_constraint', True),
                 substitution_penalty_parity=kwargs.get('substitution_weight_equal', True))
 
-        # TODO: Make sure `watched_phenotypes` starts with O- and O+
         def inventory():
             return Inventory(
-                kwargs.get('max_age', 35), 
+                kwargs.get('max_age', 35),
                 kwargs.get('starting_inventory', 30_000 - 3500),
-                watched_antigens=kwargs.get('watched_antigens', np.array([114688])),
-                watched_phenotypes=kwargs.get('watched_phenotypes', np.array([0])),
+                watched_antigens=kwargs.get(
+                    'watched_antigens', np.array([114688])),
+                watched_phenotypes=kwargs.get(
+                    'watched_phenotypes', np.array([0])),
                 start_age_dist=init_age_dist)
 
         pre_compute_folder = pre_compute_folder if _anticipation[1] or _anticipation[2] else None
@@ -196,19 +205,18 @@ def exp3(rules, anticipation=False, seed=0xBE_BAD_BAE, cpus=1, replications=60, 
 
         pad = [0, 0, 0]
         allo_padded = np.hstack(([pad, pad], np.vstack(manager.allo)))
-        scd_short_padded = np.full((2, len(ANTIGENS)), np.array(manager.scd_shorts)[:, None])
-        all_short_padded = np.full((2, len(ANTIGENS)), np.array(manager.all_shorts)[:, None])
+        scd_short_padded = np.full(
+            (2, len(ANTIGENS)), np.array(manager.scd_shorts)[:, None])
+        all_short_padded = np.full(
+            (2, len(ANTIGENS)), np.array(manager.all_shorts)[:, None])
 
         index = ['mismatch_avg', 'mismatch_stderr', 'allo_avg', 'allo_stderr', 'subs_avg', 'subs_stderr',
                  'short_avg', 'short_stderr', 'all_short_avg', 'all_short_stderr']
-        stacked = np.vstack((*manager.mismatches, allo_padded, *manager.subs, scd_short_padded, all_short_padded))
+        stacked = np.vstack((*manager.mismatches, allo_padded,
+                            *manager.subs, scd_short_padded, all_short_padded))
         df = pd.DataFrame(stacked, columns=ANTIGENS, index=index)
 
         now = datetime.datetime.now()
-        # folder = os.path.join(f'out/experiments/exp{exp}', root_folder_date, root_folder_time, '')
-        # folder = os.path.realpath(folder)
-        # folder = os.path.realpath(f'out/experiments/exp{exp}/' + now.strftime('%Y%m%d'))
-        # os.makedirs(folder, exist_ok=True)
 
         file = os.path.join(folder, rule + now.strftime('%H-%M_output.tsv'))
 
@@ -229,42 +237,54 @@ def exp3(rules, anticipation=False, seed=0xBE_BAD_BAE, cpus=1, replications=60, 
         df3 = pd.DataFrame(manager.abo_cm, columns=cols)
         file3 = os.path.join(folder, rule + now.strftime('%H-%M_abocm.tsv'))
         df3.to_csv(file3, sep='\t')
-        
+
         df3_1 = pd.DataFrame(manager.abod_mm, columns=cols)
-        file3_1 = os.path.join(folder, rule + now.strftime('%H-%M_abodmm_subs.tsv'))
+        file3_1 = os.path.join(
+            folder, rule + now.strftime('%H-%M_abodmm_subs.tsv'))
         df3_1.to_csv(file3_1, sep='\t')
-        
-        df3_2_cols = ['D_substitutions', 'ABO_substitutions', 'ABOD_substitutions']
+
+        df3_2_cols = ['D_substitutions',
+                      'ABO_substitutions', 'ABOD_substitutions']
         df3_2 = pd.DataFrame(manager.pats_subs, columns=df3_2_cols)
-        file3_2 = os.path.join(folder, rule + now.strftime('%H-%M_abodmm_pats_subs.tsv'))
+        file3_2 = os.path.join(
+            folder, rule + now.strftime('%H-%M_abodmm_pats_subs.tsv'))
         df3_2.to_csv(file3_2, sep='\t')
 
-        file4 = os.path.join(folder, rule + now.strftime('%H-%M_failures.json'))
+        file4 = os.path.join(
+            folder, rule + now.strftime('%H-%M_failures.json'))
 
         with open(file4, 'w+') as f4:
             json.dump(manager.failures, f4, indent=2)
-            
+
         objectives = manager.objs
-        obj_cols = ['alloimmunisations', 'scd_shortages', 'expiries', 'all_shortages'] 
+        obj_cols = ['alloimmunisations',
+                    'scd_shortages', 'expiries', 'all_shortages']
         obj_stock_cols = ['O_neg_level', 'O_pos_level', 'O_level']
-        obj_mm_cols = ['D_subs_num_patients', 'ABO_subs_num_patients', 'ABOD_subs_num_patients']
-        df_obj = pd.DataFrame(objectives, columns=obj_cols+obj_stock_cols+obj_mm_cols)
-        file5 = os.path.join(folder, rule + now.strftime('%H-%M_objectives.tsv'))
+        obj_mm_cols = ['D_subs_num_patients',
+                       'ABO_subs_num_patients', 'ABOD_subs_num_patients']
+        df_obj = pd.DataFrame(
+            objectives, columns=obj_cols+obj_stock_cols+obj_mm_cols)
+        file5 = os.path.join(
+            folder, rule + now.strftime('%H-%M_objectives.tsv'))
         df_obj.to_csv(file5, sep='\t', index=False)
 
-        file6 = os.path.join(folder, rule + now.strftime('%H-%M_age_distributions.npz'))
-        age_distributions = dict(total_age_dist=manager.ages[0], total_age_dist_stderr=manager.ages[1])
+        file6 = os.path.join(
+            folder, rule + now.strftime('%H-%M_age_distributions.npz'))
+        age_distributions = dict(
+            total_age_dist=manager.ages[0], total_age_dist_stderr=manager.ages[1])
         array_names = kwargs.get('watched_phenotypes_names', ['O-'])
         for i, name in enumerate(array_names):
-            age_distributions.update({name: manager.phen_ages[0][i], name + '_stderr': manager.phen_ages[1][i]})
+            age_distributions.update(
+                {name: manager.phen_ages[0][i], name + '_stderr': manager.phen_ages[1][i]})
         age_distributions.update(
             {'age_dist_given_to_scd': manager.scd_ages[0],
              'age_dist_given_to_scd_stderr': manager.scd_ages[1]})
         np.savez(file6, **age_distributions)
-        
+
         record_computation_times = kwargs.get('computation_times', False)
         if record_computation_times:
-            file7 = os.path.join(folder, rule + now.strftime('%H-%M_computation_times.tsv'))
+            file7 = os.path.join(
+                folder, rule + now.strftime('%H-%M_computation_times.tsv'))
             np.savetxt(file7, manager.computation_times, delimiter='\t')
 
         end_time = time.time()
@@ -275,7 +295,6 @@ def exp3(rules, anticipation=False, seed=0xBE_BAD_BAE, cpus=1, replications=60, 
     print(f'\nThe output folder is at {folder}')
 
 
-# TODO: Refactor to accommodate inclusion of locations and patient groups
 def precompute_exp3(
         rules, anticipation=False, seed=0xBE_BAD_BAE, cpus=1, pop_phen_configs: dict = None, replications=200,
         folder=None, **kwargs):
@@ -295,17 +314,22 @@ def precompute_exp3(
     print()
     if pop_phen_configs is None:
         pop_phen_configs = dict()
-    matching_rules = load_rule_sets('BSCSimulator/experiments/matching_rules.json')['MATCHING_RULES']
-    donor_data = population_phenotype(pop_phen_configs.get('donor', 'data/bloodgroup_frequencies/blood_groups_donors.json'), 0.01)
-    patient_data = population_phenotype(pop_phen_configs.get('patient', 'data/bloodgroup_frequencies/blood_groups.json'), 1.0)
+    matching_rules = load_rule_sets(
+        'BSCSimulator/experiments/matching_rules.json')['MATCHING_RULES']
+    donor_data = population_phenotype(pop_phen_configs.get(
+        'donor', 'data/bloodgroup_frequencies/blood_groups_donors.json'), 0.01)
+    patient_data = population_phenotype(pop_phen_configs.get(
+        'patient', 'data/bloodgroup_frequencies/blood_groups.json'), 1.0)
     non_scd_frequencies = dummy_population_phenotypes(pop_phen_configs.get(
         'dummy', 'data/bloodgroup_frequencies/ABD_dummy_demand.tsv'))
     dummy_data = pad_abd_phenotypes(non_scd_frequencies, len(ANTIGENS) - 3)
     allo_ab_data = load_alloantibodies()
     data = (donor_data, patient_data)
     immuno = load_immunogenicity()
-    init_age_dist = load_initial_age_distribution(kwargs.get('initial_age_dist', None))
-    folder = folder if folder is not None else os.path.realpath(f'out/experiments/exp3/precompute/{start_datetime}')
+    init_age_dist = load_initial_age_distribution(
+        kwargs.get('initial_age_dist', None))
+    folder = folder if folder is not None else os.path.realpath(
+        f'out/experiments/exp3/precompute/{start_datetime}')
     folder = os.path.realpath(folder)
     os.makedirs(folder, exist_ok=True)
 
@@ -313,11 +337,12 @@ def precompute_exp3(
         matching_antigens = matching_rules[rule]['antigen_set']
 
         appointments = kwargs.get('appointments', randint(33, 34))
-        units_per_appointment = kwargs.get('units_per_appointment', randint(10, 11))
+        units_per_appointment = kwargs.get(
+            'units_per_appointment', randint(10, 11))
         stock = kwargs.get('stock', randint(3500, 3501))
         _excess_supply = kwargs.get('excess_supply', 3500 - 33 * 10)
 
-        # unpack warm_up, horizon, cool_down from kwargs if present else use defaults   
+        # unpack warm_up, horizon, cool_down from kwargs if present else use defaults
         warm_up = kwargs.get('warm_up', 7 * 6 * 4)  # 4 weeks
         horizon = kwargs.get('horizon', 7 * 6 * 5)  # 5 weeks
         cool_down = kwargs.get('cool_down', 0)  # 0 weeks
@@ -327,8 +352,10 @@ def precompute_exp3(
         Antigens.population_abd_usabilities = abd_usability(
             non_scd_frequencies.frequencies.to_numpy(),
             kwargs.get('scd_requests_ratio', 330/3500), 1.0)
-        antigens = Antigens(ANTIGENS, rule=matching_antigens, allo_Abs=allo_ab_data.values.flatten())
-        antigens.allo_risk = immuno[antigens.antigen_index[3:]].to_numpy().flatten()
+        antigens = Antigens(ANTIGENS, rule=matching_antigens,
+                            allo_Abs=allo_ab_data.values.flatten())
+        antigens.allo_risk = immuno[antigens.antigen_index[3:]].to_numpy(
+        ).flatten()
 
         def demand(): return Demand(antigens, patient_data, appointments, units_per_appointment,
                                     antigen_string=False, dummy_data=dummy_data, dummy_extra_demand=_excess_supply)
@@ -338,10 +365,13 @@ def precompute_exp3(
         def matching(): return MatchingArea(algo='transport', antigens=antigens, matching_rule=rule,
                                             anticipation=_anticipation)
 
-        def inventory(): return Inventory(kwargs.get('max_age', 35), 
-                                          kwargs.get('starting_inventory', 30_000 - 3500),
-                                          watched_antigens=kwargs.get('watched_antigens', np.array([114688])),
-                                          watched_phenotypes=kwargs.get('watched_phenotypes', np.array([0])),
+        def inventory(): return Inventory(kwargs.get('max_age', 35),
+                                          kwargs.get(
+                                              'starting_inventory', 30_000 - 3500),
+                                          watched_antigens=kwargs.get(
+                                              'watched_antigens', np.array([114688])),
+                                          watched_phenotypes=kwargs.get(
+                                              'watched_phenotypes', np.array([0])),
                                           start_age_dist=init_age_dist)
 
         manager = SimulationManager(antigens, demand, supply, matching, inventory,
@@ -358,11 +388,10 @@ def precompute_exp3(
     print(f'\nThe output folder is at {folder}')
 
 
-# TODO: Refactor to accommodate inclusion of locations and patient groups
 def tuning(rule='Extended', seed=0xBE_BAD_BAE, replications=10, cpus=10, weights: np.ndarray = None,
            pop_phen_configs: dict = None, num_objectives=1, anticipation=True, **kwargs):
     """Tuning of the simulation parameters
-    
+
     :param str rule: The matching rule to use, defaults to 'Extended'
     :param int seed: The seed to use, defaults to 0xBE_BAD_BAE
     :param int cpus: The number of CPUs to use, defaults to 10
@@ -372,11 +401,13 @@ def tuning(rule='Extended', seed=0xBE_BAD_BAE, replications=10, cpus=10, weights
     root_now = datetime.datetime.now()
     root_folder_date = root_now.strftime('%Y%m%d')
     root_folder_time = root_now.strftime('%H%M')
-    exp: str = '3' if kwargs.get('exp2', None) is None else kwargs.get('exp2', '2')
+    exp: str = '3' if kwargs.get(
+        'exp2', None) is None else kwargs.get('exp2', '2')
     print(f'\n###\Tuning evaluation at {start_datetime}')
     if pop_phen_configs is None:
         pop_phen_configs = dict()
-    matching_rules = load_rule_sets('BSCSimulator/experiments/matching_rules.json')['MATCHING_RULES']
+    matching_rules = load_rule_sets(
+        'BSCSimulator/experiments/matching_rules.json')['MATCHING_RULES']
     donor_data = population_phenotype(pop_phen_configs.get(
         'donor', 'data/bloodgroup_frequencies/blood_groups_donors.json'), 0.01)
     patient_data = population_phenotype(pop_phen_configs.get(
@@ -385,12 +416,14 @@ def tuning(rule='Extended', seed=0xBE_BAD_BAE, replications=10, cpus=10, weights
         pop_phen_configs.get('dummy', 'data/bloodgroup_frequencies/ABD_dummy_demand.tsv'))
     dummy_data = pad_abd_phenotypes(non_scd_frequencies, len(ANTIGENS) - 3)
     dummy_data = kwargs.get('dummy_data', dummy_data)
-    # allo_ab_data = load_alloantibodies()
-    allo_ab_data = load_alloantibodies(kwargs.get('ab_datafile', 'data/antibody_frequencies/bayes_alloAb_frequencies.tsv'))
+    allo_ab_data = load_alloantibodies(kwargs.get(
+        'ab_datafile', 'data/antibody_frequencies/bayes_alloAb_frequencies.tsv'))
     data = (donor_data, patient_data)
     immuno = load_immunogenicity()
-    init_age_dist = load_initial_age_distribution(kwargs.get('initial_age_dist', None))
-    pre_compute_folder = os.path.realpath(kwargs.get('pre_compute_folder', f'out/experiments/exp{exp}/precompute/'))
+    init_age_dist = load_initial_age_distribution(
+        kwargs.get('initial_age_dist', None))
+    pre_compute_folder = os.path.realpath(kwargs.get(
+        'pre_compute_folder', f'out/experiments/exp{exp}/precompute/'))
 
     matching_antigens = matching_rules['Extended']['antigen_set']
 
@@ -398,7 +431,8 @@ def tuning(rule='Extended', seed=0xBE_BAD_BAE, replications=10, cpus=10, weights
         weights = np.ones(5)
 
     appointments = kwargs.get('appointments', randint(33, 34))
-    units_per_appointment = kwargs.get('units_per_appointment', randint(10, 11))
+    units_per_appointment = kwargs.get(
+        'units_per_appointment', randint(10, 11))
     stock = kwargs.get('stock', randint(3500, 3501))
     _excess_supply = kwargs.get('excess_supply', 3500 - 33 * 10)
 
@@ -417,8 +451,10 @@ def tuning(rule='Extended', seed=0xBE_BAD_BAE, replications=10, cpus=10, weights
     Antigens.population_abd_usabilities = abd_usability(
         non_scd_frequencies.frequencies.to_numpy(),
         kwargs.get('scd_requests_ratio', 330/3500), 1.0)
-    antigens = Antigens(ANTIGENS, rule=matching_antigens, allo_Abs=allo_ab_data.values.flatten())
-    antigens.allo_risk = immuno[antigens.antigen_index[3:]].to_numpy().flatten()
+    antigens = Antigens(ANTIGENS, rule=matching_antigens,
+                        allo_Abs=allo_ab_data.values.flatten())
+    antigens.allo_risk = immuno[antigens.antigen_index[3:]].to_numpy(
+    ).flatten()
 
     def demand():
         return Demand(antigens, patient_data, appointments, units_per_appointment,
@@ -438,7 +474,8 @@ def tuning(rule='Extended', seed=0xBE_BAD_BAE, replications=10, cpus=10, weights
         return Inventory(
             kwargs.get('max_age', 35),
             kwargs.get('starting_inventory', 30_000 - 3500),
-            watched_antigens=kwargs.get('watched_antigens', np.array([114688])),
+            watched_antigens=kwargs.get(
+                'watched_antigens', np.array([114688])),
             watched_phenotypes=kwargs.get('watched_phenotypes', np.array([0])),
             start_age_dist=init_age_dist)
 
@@ -455,37 +492,43 @@ def tuning(rule='Extended', seed=0xBE_BAD_BAE, replications=10, cpus=10, weights
 
     pad = [0, 0, 0]
     allo_padded = np.hstack(([pad, pad], np.vstack(manager.allo)))
-    scd_short_padded = np.full((2, len(ANTIGENS)), np.array(manager.scd_shorts)[:, None])
-    all_short_padded = np.full((2, len(ANTIGENS)), np.array(manager.all_shorts)[:, None])
+    scd_short_padded = np.full(
+        (2, len(ANTIGENS)), np.array(manager.scd_shorts)[:, None])
+    all_short_padded = np.full(
+        (2, len(ANTIGENS)), np.array(manager.all_shorts)[:, None])
 
     index = ['mismatch_avg', 'mismatch_stderr', 'allo_avg', 'allo_stderr', 'subs_avg', 'subs_stderr',
              'short_avg', 'short_stderr', 'all_short_avg', 'all_short_stderr']
-    stacked = np.vstack((*manager.mismatches, allo_padded, *manager.subs, scd_short_padded, all_short_padded))
+    stacked = np.vstack((*manager.mismatches, allo_padded,
+                        *manager.subs, scd_short_padded, all_short_padded))
     df = pd.DataFrame(stacked, index=index, columns=ANTIGENS)
 
     now = datetime.datetime.now()
     folder = kwargs.get('folder', os.path.join(
         'out/experiments/exp3/tuning', root_folder_date, root_folder_time, ''))
     folder = os.path.realpath(folder)
-    # folder = os.path.realpath('out/experiments/exp3/tuning/' + now.strftime('%Y%m%d'))
     os.makedirs(folder, exist_ok=True)
 
     file = os.path.join(folder, rule + now.strftime('%d_%H-%M_output.tsv'))
 
     df.to_csv(file, sep='\t')
     print(f'Output written to {file}')
-    
-    # objectives_values = manager.objs
-    obj_cols = ['alloimmunisations', 'scd_shortages', 'expiries', 'all_shortages'] 
+
+    obj_cols = ['alloimmunisations',
+                'scd_shortages', 'expiries', 'all_shortages']
     obj_stock_cols = ['O_neg_level', 'O_pos_level', 'O_level']
-    obj_mm_cols = ['D_subs_num_patients', 'ABO_subs_num_patients', 'ABOD_subs_num_patients']
-    df_obj = pd.DataFrame(manager.objs, columns=obj_cols+obj_stock_cols+obj_mm_cols)
-    file5 = os.path.join(folder, rule + now.strftime('%d_%H-%M_objectives.tsv'))
+    obj_mm_cols = ['D_subs_num_patients',
+                   'ABO_subs_num_patients', 'ABOD_subs_num_patients']
+    df_obj = pd.DataFrame(manager.objs, columns=obj_cols +
+                          obj_stock_cols+obj_mm_cols)
+    file5 = os.path.join(
+        folder, rule + now.strftime('%d_%H-%M_objectives.tsv'))
     df_obj.to_csv(file5, sep='\t', index=False)
 
-    objectives_to_use = kwargs.get('objectives_names', obj_cols)[:num_objectives]
+    objectives_to_use = kwargs.get('objectives_names', obj_cols)[
+        :num_objectives]
     objectives_values = df_obj[objectives_to_use].mean(axis=0).values
-    
+
     if num_objectives == 1:
         return objectives_values[0]
     else:

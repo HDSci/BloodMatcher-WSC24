@@ -10,19 +10,13 @@ import scipy.stats as stats
 logger = logging.getLogger(__name__)
 
 # What to run in main
-main_func = 'EXPERIMENT_3'  # 'BAYES_OPT' | 'EXPERIMENT_3' | 'PRECOMPUTE' | 'MULTI_OBJECTIVE_BAYES_OPT'
+# 'BAYES_OPT' | 'EXPERIMENT_3' | 'PRECOMPUTE' | 'MULTI_OBJECTIVE_BAYES_OPT'
+main_func = 'EXPERIMENT_3'
 
 seed = 0xBE_BAD_BAE
 
-# Optimised weights
-# penalty_weights = [0.578, 0, 0, 0.061, 0.361]
 # Naive weights
 penalty_weights = None
-
-# Experiment 2 timing
-# simulation_time = {'warm_up': 0,
-#                    'horizon': 1,
-#                    'cool_down': 0}
 
 # Experiment 3 timing
 simulation_time = {'warm_up': 7 * 6 * 4,
@@ -30,16 +24,14 @@ simulation_time = {'warm_up': 7 * 6 * 4,
                    'cool_down': 0}
 
 # Anticpation for usability
-# anticipation = [True, False, False]
+anticipation = [True, False, False]
 # No anticipation
 # anticipation = False
 # Anticipation and forecasting
-anticipation = [True, False, False]
+# anticipation = [True, True, True]
 
 pop_phen_configs = dict()
 
-# Experiment 2
-# dummy_demand = {'dummy_data': None, 'excess_supply': 0}
 # Experiment 3
 dummy_demand = dict()
 # For precompute
@@ -99,7 +91,7 @@ bayes_opt = {
     'normalized_kernel': True,
 }
 
-solver = 'maxflow' # 'pot' or 'ortools' or ('maxflow' or 'ortools-maxflow)
+solver = 'maxflow'  # 'pot' or 'ortools' or ('maxflow' or 'ortools-maxflow)
 
 constraints = {
     'max_age': 35,
@@ -123,11 +115,16 @@ if len(sys.argv) > 1:
         logger.exception('No parameter file passed. Using default parameters.')
         print('No parameter file passed. Using default parameters.')
     except FileNotFoundError as e:
-        logger.exception(f'Parameter file {pfile} not found. Using default parameters.')
+        logger.exception(
+            f'Parameter file {pfile} not found. Using default parameters.')
         print(f'Parameter file {pfile} not found. Using default parameters.')
     except ImportError as e:
-        logger.exception(f'Parameter file {pfile} is not a valid python file. Using default parameters.')
-        print(f'Parameter file {pfile} is not a valid python file. Using default parameters.')
+        logger.exception(
+            f'Parameter file {pfile} is not a valid python file. Using default parameters.')
+        print(
+            f'Parameter file {pfile} is not a valid python file. Using default parameters.')
     except Exception as e:
-        logger.exception(f'Error while importing parameter file {pfile}. Using default parameters.')
-        print(f'Error while importing parameter file {pfile}. Using default parameters.')
+        logger.exception(
+            f'Error while importing parameter file {pfile}. Using default parameters.')
+        print(
+            f'Error while importing parameter file {pfile}. Using default parameters.')

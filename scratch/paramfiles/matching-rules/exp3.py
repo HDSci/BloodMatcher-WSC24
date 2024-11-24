@@ -9,7 +9,8 @@ import scipy.stats as stats
 
 logger = logging.getLogger(__name__)
 
-main_func = 'EXPERIMENT_3'  # 'BAYES_OPT' | 'EXPERIMENT_3' | 'PRECOMPUTE' | 'MULTI_OBJECTIVE_BAYES_OPT'
+# 'BAYES_OPT' | 'EXPERIMENT_3' | 'PRECOMPUTE' | 'MULTI_OBJECTIVE_BAYES_OPT'
+main_func = 'EXPERIMENT_3'
 
 seed = 0xBE_BAD_BAE
 
@@ -37,7 +38,8 @@ simulation_time = {'warm_up': 7 * 6 * 3,
 # Anticipation and forecasting
 anticipation = [True, False, False]
 
-pop_phen_configs = dict(dummy='data/bloodgroup_frequencies/ABD_old_dummy_demand.tsv')
+pop_phen_configs = dict(
+    dummy='data/bloodgroup_frequencies/ABD_old_dummy_demand.tsv')
 
 # Experiment 2
 # dummy_demand = {'dummy_data': None, 'excess_supply': 0}
@@ -93,7 +95,7 @@ bayes_opt = {
     'objective_names': ['alloimmunisations', 'scd_shortages', 'O_level']
 }
 
-solver = 'maxflow' # 'pot' or 'ortools' or ('maxflow' or 'ortools-maxflow)
+solver = 'maxflow'  # 'pot' or 'ortools' or ('maxflow' or 'ortools-maxflow)
 
 constraints = {
     'max_age': 35,

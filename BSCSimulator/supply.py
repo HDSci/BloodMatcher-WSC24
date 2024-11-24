@@ -3,7 +3,6 @@ import numpy as np
 
 class Supply:
 
-    # TODO: Refactor to take in locations and the supply for each location.
     def __init__(self, antigens=None, data=None, num_units_rv=None, antigen_string=True):
         self.antigens = antigens
         self.data = data
@@ -32,7 +31,8 @@ class Supply:
             num_units = self.num_units_dist.rvs(random_state=rng)
 
         phenos = self._supply(rng, num_units)[:, None]
-        ids = np.arange(self._unit_id_ticker, self._unit_id_ticker + num_units)[:, None]
+        ids = np.arange(self._unit_id_ticker,
+                        self._unit_id_ticker + num_units)[:, None]
         times = np.full(num_units, self.current_date, dtype=int)[:, None]
         result = np.hstack((ids, phenos, times))
         self._unit_id_ticker += num_units

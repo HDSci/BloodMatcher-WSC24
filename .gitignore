@@ -18,6 +18,9 @@ out/
 # Miscellaneous
 nohup*.out
 scratch/
+!scratch/notebooks
+!scratch/paramfiles
+!scratch/convenience_functions.py
 # Cython(ized) files
 *.so
 *.c
