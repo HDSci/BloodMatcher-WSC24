@@ -1,3 +1,8 @@
+"""Docstring for scratch.convenience_functions.py
+
+This module contains convenience functions for plotting and analysing data from the blood supply chain model/simulation.
+"""
+
 import os
 
 import matplotlib.pyplot as plt
