@@ -9,7 +9,7 @@ import seaborn as sns
 
 def objectives_stats(file_path) -> list[tuple[float]]:
     """Calculate the mean and standard error of the mean for each objective (column).
-    
+
         :param str file_path: The path to the objectives TSV file.
         :return list: A list of tuples where each tuple contains the mean and standard error of the mean for a column.
     """
@@ -36,7 +36,7 @@ def objectives_stats_table(files: dict, separate_vals_errs=False) -> tuple[pd.Da
                 - A DataFrame with formatted statistics.
                 - A tuple of two DataFrames: one for values and one for errors.
     """
-    
+
     data_dict = dict()
     val_dict = dict()
     err_dict = dict()
@@ -100,7 +100,7 @@ def exp2_figs(abod, limited, extended, prob_neg_phen=1, figsize=None, labels=['A
     """
     Create a series of bar graphs for the expected number of mismatches, substitutions, and alloimmunisations
     for the three matching rules.
-    
+
     Args:
         abod (str): Path to the ABOD (or the first) file.
         limited (str): Path to the Limited (or the second) file.
@@ -173,7 +173,7 @@ def stacked_stock_levels_graph(datafilename, columns, labels=None, bbox_to_ancho
                                warmup_period=7*6*3):
     """
     Plots a stacked area graph of stock levels over time from a given data file.
-    
+
     Parameters:
         datafilename (str): Path to the data file.
             If it ends with '_output.tsv', it will be replaced with '_stocks.tsv'.
@@ -187,11 +187,11 @@ def stacked_stock_levels_graph(datafilename, columns, labels=None, bbox_to_ancho
         demarcate_warmup (bool, optional): Whether to draw a line to demarcate the warmup period. Defaults to False.
         warmup_color (str, optional): Color of the warmup line. Defaults to 'black'.
         raw_data (bool, optional): Whether to use raw data for plotting instead of percentages. Defaults to False.
-        warmup_period (int, optional): Length of the warmup period in days. Defaults to 7*6*3 (i.e., 18 weeks).
-    
+        warmup_period (int, optional): Length of the warmup period in days. Defaults to 7×6×3 (i.e., 18 weeks).
+
     Returns:
         None: The function creates and displays a plot.
-    """ 
+    """
     if datafilename.endswith('_output.tsv'):
         datafilename = datafilename.replace('_output.tsv', '_stocks.tsv')
     df = pd.read_csv(os.path.realpath(
