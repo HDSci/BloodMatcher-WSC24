@@ -7,7 +7,12 @@ import pandas as pd
 import seaborn as sns
 
 
-def objectives_stats(file_path):
+def objectives_stats(file_path) -> list[tuple[float]]:
+    """Calculate the mean and standard error of the mean for each objective (column).
+    
+        :param str file_path: The path to the objectives TSV file.
+        :return list: A list of tuples where each tuple contains the mean and standard error of the mean for a column.
+    """
     output_df = pd.read_csv(file_path, sep='\t')
     columns = list(output_df.columns)
     return_value = []
@@ -17,7 +22,21 @@ def objectives_stats(file_path):
     return return_value
 
 
-def objectives_stats_table(files: dict, separate_vals_errs=False):
+def objectives_stats_table(files: dict, separate_vals_errs=False) -> tuple[pd.DataFrame, tuple[pd.DataFrame, pd.DataFrame]] | pd.DataFrame:
+    """
+    Generates a table of objective statistics from a dictionary of file paths.
+    Args:
+        files (dict): A dictionary where keys are identifiers and values are file paths.
+        separate_vals_errs (bool, optional): If True, returns separate DataFrames for values and errors. 
+            Defaults to False.
+    Returns:
+        tuple[DataFrame, tuple[DataFrame, DataFrame]] | DataFrame: 
+            If separate_vals_errs is False, returns a single DataFrame with formatted statistics.
+            If separate_vals_errs is True, returns a tuple containing:
+                - A DataFrame with formatted statistics.
+                - A tuple of two DataFrames: one for values and one for errors.
+    """
+    
     data_dict = dict()
     val_dict = dict()
     err_dict = dict()
@@ -32,7 +51,7 @@ def objectives_stats_table(files: dict, separate_vals_errs=False):
         val_dict[key] = objstats_arr[:, 0]
         err_dict[key] = objstats_arr[:, 1]
     df = pd.DataFrame(data_dict, index=['alloimmunisations', 'scd_shortages',
-                      'expiries', 'all_shortages', 'O_neg_level', 'O_pos_level', 'O_level',
+                                        'expiries', 'all_shortages', 'O_neg_level', 'O_pos_level', 'O_level',
                                         'D_subs_num_patients', 'ABO_subs_num_patients', 'ABOD_subs_num_patients'])
     if separate_vals_errs:
         df_val = pd.DataFrame(val_dict, index=['alloimmunisations', 'scd_shortages',
@@ -45,7 +64,24 @@ def objectives_stats_table(files: dict, separate_vals_errs=False):
     return df
 
 
-def read_and_average_comp_times(files: dict):
+def read_and_average_comp_times(files: dict) -> pd.DataFrame:
+    """
+    Reads computation time files, calculates the mean and standard deviation, and returns a DataFrame.
+
+    This function processes a dictionary of file paths, reads the computation times from each file,
+    calculates the mean and standard deviation for each set of times, and stores the results in a
+    pandas DataFrame.
+
+    Args:
+        files (dict): A dictionary where keys are identifiers and values are file paths to the computation
+                      time files. The file paths should end with '_output.tsv', which will be replaced
+                      with '_computation_times.tsv' to locate the actual computation time files.
+
+    Returns:
+        DataFrame: A DataFrame with the mean and standard deviation of computation times for each file.
+                   The DataFrame has one row labeled 'computation_time' and columns corresponding to
+                   the keys in the input dictionary. The values are formatted as 'mean ± std_dev'.
+    """
     data_dict = dict()
     for key, value in files.items():
         if value.endswith('_output.tsv'):
@@ -61,16 +97,26 @@ def read_and_average_comp_times(files: dict):
 
 def exp2_figs(abod, limited, extended, prob_neg_phen=1, figsize=None, labels=['ABOD', 'Limited', 'Extended'],
               colours=['C0', 'C1', 'C2'], ylabels=None, pdfs=None, skip_plots=False):
-    """Figures for Experiment 2
-
-    :param abod:
-    :param limited:
-    :param extended:
-    :param prob_neg_phen:
-    :param figsize:
-    :return:
     """
-
+    Create a series of bar graphs for the expected number of mismatches, substitutions, and alloimmunisations
+    for the three matching rules.
+    
+    Args:
+        abod (str): Path to the ABOD (or the first) file.
+        limited (str): Path to the Limited (or the second) file.
+        extended (str): Path to the Extended (or the third) file.
+        prob_neg_phen (float, optional): Deprecated, fixed to 1. Defaults to 1.
+        figsize (tuple, optional): Size of the figure. Defaults to None.
+        labels (list, optional): Labels for the three matching rules. 
+            Defaults to ['ABOD', 'Limited', 'Extended'].
+        colours (list, optional): Colours for the three matching rules. 
+            Defaults to ['C0', 'C1', 'C2'].
+        ylabels (list, optional): Labels for the y-axis. Defaults to None.
+        pdfs (list, optional): Paths to save the figures as PDFs. Defaults to None.
+        skip_plots (list, optional): List of booleans to skip plots. Defaults to False.
+    Returns:
+        None
+    """
     abod_df = pd.read_csv(abod, sep='\t', index_col=0)
     limited_df = pd.read_csv(limited, sep='\t', index_col=0)
     extended_df = pd.read_csv(extended, sep='\t', index_col=0)
@@ -126,16 +172,26 @@ def stacked_stock_levels_graph(datafilename, columns, labels=None, bbox_to_ancho
                                demarcate_warmup=False, warmup_color='black', raw_data=False,
                                warmup_period=7*6*3):
     """
-    Create a stacked graph of stock levels
-    :param datafilename: name of the file with data
-    :param columns: list of columns to plot
-    :param labels: list of labels for columns
-    :param xlabel: label for x axis
-    :param ylabel: label for y axis
-    :param figsize: size of the figure
-    :param dpi: resolution of the figure
-    :return: None
-    """
+    Plots a stacked area graph of stock levels over time from a given data file.
+    
+    Parameters:
+        datafilename (str): Path to the data file.
+            If it ends with '_output.tsv', it will be replaced with '_stocks.tsv'.
+        columns (list): List of column names to be plotted.
+        labels (list, optional): List of labels for the columns. Defaults to None.
+        bbox_to_anchor (tuple, optional): Position of the legend. Defaults to (1.01, 0.5).
+        xlabel (str, optional): Label for the x-axis. Defaults to 'Time (days)'.
+        ylabel (str, optional): Label for the y-axis. Defaults to 'Level of total stock'.
+        figsize (tuple, optional): Size of the figure. Defaults to (8, 6).
+        dpi (int, optional): Dots per inch for the figure. Defaults to 200.
+        demarcate_warmup (bool, optional): Whether to draw a line to demarcate the warmup period. Defaults to False.
+        warmup_color (str, optional): Color of the warmup line. Defaults to 'black'.
+        raw_data (bool, optional): Whether to use raw data for plotting instead of percentages. Defaults to False.
+        warmup_period (int, optional): Length of the warmup period in days. Defaults to 7*6*3 (i.e., 18 weeks).
+    
+    Returns:
+        None: The function creates and displays a plot.
+    """ 
     if datafilename.endswith('_output.tsv'):
         datafilename = datafilename.replace('_output.tsv', '_stocks.tsv')
     df = pd.read_csv(os.path.realpath(
@@ -163,7 +219,36 @@ def plot_age_dist_blood(datafilename, array='age_dist_given_to_scd', age_range=N
                         days_range=None, title='Age distribution of blood given to SCD patients over time',
                         vmax=300, cmap='viridis', figsize=(15, 6), dpi=200, re_index=False,
                         print_max=False, every_n_xtick=2, plot_avg=False, print_mean=False,
-                        pdf=None):
+                        pdf=None) -> pd.DataFrame | None:
+    """
+    Plots the age distribution of blood given to SCD (Sickle Cell Disease) patients over time.
+
+    Parameters:
+        datafilename (str): Path to the data file.
+            If it ends with '_output.tsv', it will be replaced with '_age_distributions.npz'.
+        array (str): Key to access the specific age distribution data within the .npz file. 
+            Determines which graph/data to plot.
+            Access the `.files` attribute of the loaded .npz file to see available keys. 
+            Default is 'age_dist_given_to_scd'.
+        age_range (array-like, optional): Range of ages to include in the plot.
+            Default is None, which uses ages 1 to 14.
+        days_range (array-like, optional): Range of days to include in the plot.
+            Default is None, which uses days 1 to 210.
+        title (str): Title of the plot. Default is 'Age distribution of blood given to SCD patients over time'.
+        vmax (int): Maximum value for the color scale. Default is 300.
+        cmap (str): Colormap to use for the heatmap. Default is 'viridis'.
+        figsize (tuple): Size of the figure. Default is (15, 6).
+        dpi (int): Dots per inch for the figure. Default is 200.
+        re_index (bool): Whether to re-index the days range. Default is False.
+        print_max (bool): Whether to print the maximum values in the DataFrame. Default is False.
+        every_n_xtick (int): Interval for showing x-tick labels. Default is 2.
+        plot_avg (bool): Whether to plot the average age distribution. Default is False.
+        print_mean (bool): Whether to print the mean values when plotting the average. Default is False.
+        pdf (str, optional): Path to save the plot as a PDF. Default is None.
+
+    Returns:
+        out (DataFrame, None): DataFrame of the age distribution if plot_avg is True, otherwise None.
+    """
     if datafilename.endswith('_output.tsv'):
         datafilename = datafilename.replace(
             '_output.tsv', '_age_distributions.npz')
@@ -205,6 +290,21 @@ def plot_age_dist_blood(datafilename, array='age_dist_given_to_scd', age_range=N
 
 def plot_avg_age_dist_blood_scd(df, title='Mean age distribution of blood given to SCD patients',
                                 ylim_max=None, figsize=(8, 6), dpi=200, pdf=None, print_mean=False):
+    """
+    Plots the average age distribution of blood given to Sickle Cell Disease (SCD) patients.
+
+    Parameters:
+        df (pd.DataFrame): DataFrame containing the age distribution data.
+        title (str, optional): Title of the plot. Default is 'Mean age distribution of blood given to SCD patients'.
+        ylim_max (float, optional): Maximum limit for the y-axis. Default is None.
+        figsize (tuple, optional): Size of the figure. Default is (8, 6).
+        dpi (int, optional): Dots per inch (DPI) for the figure. Default is 200.
+        pdf (str, optional): File path to save the plot as a PDF. Default is None.
+        print_mean (bool, optional): If True, prints the mean age of the blood units. Default is False.
+
+    Returns:
+        None
+    """
     fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
     df_hist = df.mean(axis=1)
     i_min = df_hist.index.min()
@@ -224,8 +324,23 @@ def plot_avg_age_dist_blood_scd(df, title='Mean age distribution of blood given 
         print(np.average(df_hist.index, weights=df_hist))
 
 
-def ccdf_avg_age_dist_blood_scd(datafilename, array='age_dist_given_to_scd', age_range=None,
-                                days_range=None, above_age=0, re_index=False):
+def ccdf_avg_age_dist_blood_scd(datafilename, array='age_dist_given_to_scd', age_range=None, days_range=None,
+                                above_age=0, re_index=False) -> float:
+    """
+    Calculate the complementary cumulative distribution function (CCDF) of the average age distribution for blood given to SCD patients.
+
+    Parameters:
+        datafilename (str): The path to the data file.
+            If it ends with '_output.tsv', it will be replaced with '_age_distributions.npz'.
+        array (str): The key for the age distribution array in the .npz file. Default is 'age_dist_given_to_scd'.
+        age_range (array-like, optional): The range of ages to consider. If None, defaults to np.arange(1, 15).
+        days_range (array-like, optional): The range of days to consider. If None, defaults to np.arange(1, 211).
+        above_age (int): The age above which to calculate the CCDF. Default is 0.
+        re_index (bool): Whether to re-index the days range starting from 1. Default is False.
+
+    Returns:
+        float: The CCDF value for the given age distribution and age cut-off.
+    """
     if datafilename.endswith('_output.tsv'):
         datafilename = datafilename.replace(
             '_output.tsv', '_age_distributions.npz')
@@ -247,8 +362,26 @@ def ccdf_avg_age_dist_blood_scd(datafilename, array='age_dist_given_to_scd', age
     return ccdf
 
 
-def draw_warmup_line(ax, x=168.5, color='black', linestyle='--', linewidth=2, text="Warm-up Period",
-                     xy=None, xytext=None):
+def draw_warmup_line(ax, x=168.5, color='black', linestyle='--', linewidth=2, text="Warm-up Period", xy=None,
+                     xytext=None):
+    """
+    Draws a vertical line on the given Axes object to indicate a warm-up period and annotates it with text.
+
+    Parameters:
+        ax (matplotlib.axes.Axes): The axes on which to draw the line.
+        x (float, optional): The x-coordinate for the vertical line. Default is 168.5.
+        color (str, optional): The color of the line and text. Default is 'black'.
+        linestyle (str, optional): The style of the line (e.g., '--' for dashed). Default is '--'.
+        linewidth (int, optional): The width of the line. Default is 2.
+        text (str, optional): The text to annotate the line with. Default is "Warm-up Period".
+        xy (tuple, optional): The (x, y) coordinates for the annotation.
+            Default is None, which calculates the y-coordinate as the mean of the y-axis limits.
+        xytext (tuple, optional): The (x, y) coordinates for the text position.
+            Default is None, which places the text slightly to the left of the line.
+
+    Returns:
+        ax (matplotlib.axes.Axes): The modified Axes object with the warm-up line and annotation.
+    """
     y = np.mean(ax.get_ylim())
     if xy is None:
         xy = (x, y)
@@ -260,9 +393,25 @@ def draw_warmup_line(ax, x=168.5, color='black', linestyle='--', linewidth=2, te
     return ax
 
 
-def avg_stock_composition(rules, rule_files, donations=None,
-                          figsize=(12, 5), dpi=200, ncol=4, bbox_to_anchor=(0.5, -0.12),
-                          pdf=None):
+def avg_stock_composition(rules, rule_files, donations=None, figsize=(12, 5), dpi=200, ncol=4,
+                          bbox_to_anchor=(0.5, -0.12), pdf=None):
+    """
+    Plots the average stock composition of blood groups based on given rules and rule files.
+
+    Parameters:
+        rules (list): List of rule names to be used as labels in the plot.
+        rule_files (list): List of file paths containing stock data for each rule.
+        donations (ndarray, optional): Array of initial donation proportions for each blood group.
+            Defaults to [14.6, 36.2, 2.8, 7.8, 7.8, 28.4, 0.6, 1.8] for O-, O+, B-, B+, A-, A+, AB-, and AB+ respectively.
+        figsize (tuple, optional): Size of the figure. Defaults to (12, 5).
+        dpi (int, optional): Dots per inch for the figure. Defaults to 200.
+        ncol (int, optional): Number of columns in the legend. Defaults to 4.
+        bbox_to_anchor (tuple, optional): Bounding box for the legend. Defaults to (0.5, -0.12).
+        pdf (str, optional): File path to save the figure as a PDF. If None, the figure is not saved. Defaults to None.
+
+    Returns:
+        None
+    """
     blood_grps = ['O-', 'O+', 'B-', 'B+', 'A-', 'A+', 'AB-', 'AB+']
     if donations is None:
         donations = np.array([14.6, 36.2, 2.8, 7.8, 7.8, 28.4, 0.6, 1.8])
