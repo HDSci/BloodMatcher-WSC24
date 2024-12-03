@@ -1,10 +1,10 @@
 import os
 
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mtick
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import matplotlib.ticker as mtick
 
 
 def objectives_stats(file_path):
