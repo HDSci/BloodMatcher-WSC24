@@ -17,7 +17,7 @@ data/*
 out/
 # Miscellaneous
 nohup*.out
-scratch/
+scratch/*
 !scratch/notebooks
 !scratch/paramfiles
 !scratch/convenience_functions.py
