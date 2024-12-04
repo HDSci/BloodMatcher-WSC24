@@ -74,13 +74,82 @@ def load_initial_age_distribution(filename: str = 'data/inventory/inital_age_dis
 
 
 def exp3(rules, anticipation=False, seed=0xBE_BAD_BAE, cpus=1, replications=60, weights=None, pop_phen_configs: dict = None, **kwargs):
-    """Experiment 3 - Six-week simulation
+    """Experiment 3
+    
+        Parameters
+        ----------
+        rules : list
+            List of rules to apply in the simulation.
+        anticipation : bool, optional
+            Whether to use anticipation in the simulation. Default is False.
+        seed : int, optional
+            Seed for random number generation. Default is 0xBE_BAD_BAE.
+        cpus : int, optional
+            Number of CPUs to use for parallel simulations. Default is 1.
+        replications : int, optional
+            Number of replications to run. Default is 60.
+        weights : list of float, optional
+            Weights for cost function. Default is None.
+        pop_phen_configs : dict, optional
+            Population phenotype configurations. Default is None.
+        **kwargs : dict
+            Additional keyword arguments for customization.
 
-    :param rules:
-    :param anticipation:
-    :param seed:
-    :param cpus:
-    :return: None
+        Other Parameters
+        ----------------
+        appointments : int, optional
+            Number of appointments. Default is a random integer between 33 and 34.
+        units_per_appointment : int, optional
+            Units per appointment. Default is a random integer between 10 and 11.
+        stock : int, optional
+            Initial stock. Default is a random integer between 3500 and 3501.
+        excess_supply : int, optional
+            Excess supply. Default is 3500 - 33 * 10.
+        warm_up : int, optional
+            Warm-up period in days. Default is 7 * 6 * 4 (24 weeks).
+        horizon : int, optional
+            Horizon period in days. Default is 7 * 6 * 5 (30 weeks).
+        cool_down : int, optional
+            Cool-down period in days. Default is 0 (0 weeks).
+        forecasting : str, optional
+            Forecasting method. Default is None.
+        solver : str, optional
+            Solver to use. Default is 'maxflow'.
+        yb_constraint : bool, optional
+            Whether to apply young blood constraint. Default is True.
+        substitution_weight_equal : bool, optional
+            Whether to use equal substitution penalty. Default is True.
+        pre_compute_folder : str, optional
+            Folder for pre-computed data. Default is 'out/experiments/exp{exp}/precompute/'.
+        watched_antigens : list, optional
+            List of watched antigens. Default is np.array([114688]).
+        watched_phenotypes : list, optional
+            List of watched phenotypes. Default is np.array([0]).
+        watched_phenotypes_names : list, optional
+            Names of watched phenotypes. Default is ['O-'].
+        max_age : int, optional
+            Maximum age for inventory. Default is 35.
+        starting_inventory : int, optional
+            Starting inventory. Default is 30_000 - 3500.
+        ab_datafile : str, optional
+            File for alloantibody data. Default is 'data/antibody_frequencies/bayes_alloAb_frequencies.tsv'.
+        initial_age_dist : str, optional
+            Initial age distribution. Default is None.
+        computation_times : bool, optional
+            Whether to record computation times. Default is False.
+        scd_requests_ratio : float, optional
+            Ratio of SCD requests. Default is 330/3500.
+        dummy_data : list, optional
+            Dummy data for extra demand. Default is None.
+
+        Raises
+        ------
+        OSError
+            If a unique output folder cannot be created after a specified number of attempts.
+
+        Notes
+        -----
+        This function runs a six-week simulation experiment with various configurations and outputs the results to specified folders.
     """
     start_time = time.time()
     start_datetime = datetime.datetime.now().strftime('%Y%m%d-%H-%M')
@@ -300,11 +369,52 @@ def precompute_exp3(
         folder=None, **kwargs):
     """Pre-computation for Experiment 3
 
-    :param rules:
-    :param anticipation:
-    :param seed:
-    :param cpus:
-    :return:
+        Parameters
+        ----------
+        rules : list
+            List of rules to be applied in the experiment.
+            For pre-computation, only one need be provided - it does not matter which one.
+        anticipation : bool, optional
+            Redundant for pre-computation.
+            Flag to indicate if anticipation or used, by default False.
+        seed : int, optional
+            Random seed for reproducibility, by default 0xBE_BAD_BAE.
+        cpus : int, optional
+            Number of CPUs to use for computation, by default 1.
+        pop_phen_configs : dict, optional
+            Configuration dictionary for population phenotypes, by default None.
+        replications : int, optional
+            Number of replications for the simulation, by default 200.
+        folder : str, optional
+            Output folder path to save pre-computed data. 
+            By default None, in which case the new folder is created with the current timestamp.
+        **kwargs : dict
+            Additional keyword arguments for configuration.
+            
+        Other Parameters
+        ----------------
+        appointments : int, optional
+            Number of SCD appointments per day, by default randint(33, 34).
+        units_per_appointment : int, optional
+            Number of units per SCD appointment, by default randint(10, 11).
+        stock : int, optional
+            Daily supply of blood units, by default randint(3500, 3501).
+        excess_supply : int, optional
+            Non-SCD demand, by default 3500 - 33 × 10.
+        warm_up : int, optional
+            Warm-up period in days, by default 7 × 6 × 4 (24 weeks).
+        horizon : int, optional
+            Horizon period in days, by default 7 × 6 × 5 (30 weeks).
+        cool_down : int, optional
+            Cool-down period in days, by default 0 (0 weeks).
+        starting_inventory : int, optional
+            Starting inventory, by default 30_000 - 3500.
+        scd_requests_ratio : float, optional
+            Ratio of SCD requests to total requests, by default 330/3500.
+
+        Returns
+        -------
+        None
     """
     start_time = time.time()
     start_datetime = datetime.datetime.now().strftime('%Y%m%d-%H-%M')
@@ -388,14 +498,48 @@ def precompute_exp3(
     print(f'\nThe output folder is at {folder}')
 
 
-def tuning(rule='Extended', seed=0xBE_BAD_BAE, replications=10, cpus=10, weights: np.ndarray = None,
-           pop_phen_configs: dict = None, num_objectives=1, anticipation=True, **kwargs):
-    """Tuning of the simulation parameters
+def tuning(rule='Extended', seed=0xBE_BAD_BAE, replications=10, cpus=10, weights: np.ndarray = None, pop_phen_configs: dict = None, num_objectives=1, anticipation=True, **kwargs):
+    """
+    Tuning of the simulation parameters.
 
-    :param str rule: The matching rule to use, defaults to 'Extended'
-    :param int seed: The seed to use, defaults to 0xBE_BAD_BAE
-    :param int cpus: The number of CPUs to use, defaults to 10
-    :return:
+    Parameters
+    ----------
+    rule : str, optional
+        The matching rule to use, by default 'Extended'.
+    seed : int, optional
+        The seed to use, by default 0xBE_BAD_BAE.
+    replications : int, optional
+        The number of replications to perform, by default 10.
+    cpus : int, optional
+        The number of CPUs to use, by default 10.
+    weights : np.ndarray, optional
+        Weights for the total penalty/cost function components, by default None.
+    pop_phen_configs : dict, optional
+        Population phenotype configurations, by default None.
+    num_objectives : int, optional
+        Number of objectives being optimised, by default 1.
+    anticipation : bool or list of bool, optional
+        Whether to use anticipation in the matching, by default True.
+    **kwargs : dict
+        Additional keyword arguments.
+        
+    Other Parameters
+    ----------------
+    objectives_names : list, optional
+        Names of the objectives
+    folder : str, optional
+        Folder to save the output from simulation replications
+    substitution_weight_equal : bool, optional
+        Whether to force both substitution penalties weights to be equal
+
+    Returns
+    -------
+    float or np.ndarray
+        The mean value(s) of the objective(s) considered.
+        
+    Notes
+    -----
+    For other possible keyword arguments, see the `exp3` function.
     """
     start_datetime = datetime.datetime.now().strftime('%Y%m%d-%H-%M')
     root_now = datetime.datetime.now()

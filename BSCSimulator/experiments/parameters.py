@@ -65,10 +65,10 @@ stock_measurement = {
 forecasting = {
     'units_days': 1,
     'requests_days': 3,
-    'units_shows': 1,
-    'requests_shows': 1
+    'units_shows': 1,  # Fraction of forecasted units that actually show up
+    'requests_shows': 1  # Fraction of forecasted requests that actually show up
 }
-pre_compute_folder = 'out/experiments/exp3/precompute/20230711-14-53/'
+pre_compute_folder = 'out/experiments/exp3/precompute/20230711-14-53/'  # Where to save precomputed data or read from
 
 ab_datafile = 'data/antibody_frequencies/bayes_alloAb_frequencies.tsv'
 
@@ -94,7 +94,7 @@ bayes_opt = {
 solver = 'maxflow'  # 'pot' or 'ortools' or ('maxflow' or 'ortools-maxflow)
 
 constraints = {
-    'max_age': 35,
+    'max_age': 35,  # Shelf life
     'max_young_blood': 14,
     'yb_constraint': True,
     'substitution_weight_equal': True
@@ -102,6 +102,11 @@ constraints = {
 
 computation_times = False
 
+## The following code block is used to import parameters from a file passed as a command line argument
+## It should only be used in the main parameter file
+## Which is at `BSCSimulator/experiments/parameters.py`
+## It should not be used in any other file,
+## as it will cause a recursion loop and error
 if len(sys.argv) > 1:
     try:
         print(f'Parameter file passed: {sys.argv[1]}')

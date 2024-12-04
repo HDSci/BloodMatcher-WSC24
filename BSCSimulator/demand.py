@@ -2,6 +2,27 @@ import numpy as np
 
 
 class Demand:
+    """
+    A class to represent the demand for blood units.
+
+    Parameters
+    ----------
+    antigens : object, optional
+        Antigens data (default is None).
+    data : pandas.DataFrame, optional
+        DataFrame containing demand choices and probabilities (default is None).
+    num_requests_rv : scipy.stats.rv_discrete, optional
+        Random variable for the number of requests (default is None).
+    num_units_rv : scipy.stats.rv_discrete, optional
+        Random variable for the number of units (default is None).
+    antigen_string : bool, optional
+        Whether to return antigen as a string (default is True).
+    dummy_data : DataFrame, optional
+        DataFrame containing dummy demand data (default is None).
+        I.e., non-SCD demand.
+    dummy_extra_demand : int, optional
+        Extra dummy demand to be added (default is 0).
+    """
 
     def __init__(self, antigens=None, data=None, num_requests_rv=None, num_units_rv=None, antigen_string=True,
                  dummy_data=None, dummy_extra_demand=0):
@@ -19,9 +40,27 @@ class Demand:
             dummy_data, dummy_extra_demand)
 
     def tick(self):
+        """
+        Increment the current date by one.
+        """
         self.current_date += 1
 
     def _demand(self, rng=None, units=None) -> np.ndarray:
+        """
+        Generate a demand phenotype based on the given random number generator and units.
+
+        Parameters
+        ----------
+        rng : numpy.random.Generator, optional
+            Random number generator (default is numpy.random).
+        units : int, optional
+            Number of units (default is None).
+
+        Returns
+        -------
+        numpy.ndarray
+            Array containing the generated demand phenotype and number of units requested.
+        """
         choices = self._demand_choices
         probabilities = self._demand_probabilities
         rng = np.random if rng is None else rng
@@ -34,6 +73,21 @@ class Demand:
             return np.array(result), self.num_units_dist.rvs(random_state=rng)
 
     def demand(self, num_requests=None, rng=None):
+        """
+        Generate multiple demands.
+
+        Parameters
+        ----------
+        num_requests : int, optional
+            Number of requests (default is None).
+        rng : numpy.random.Generator, optional
+            Random number generator (default is numpy.random).
+
+        Returns
+        -------
+        tuple
+            Tuple containing the generated demands and alloantibodies mask.
+        """
         if num_requests is None and self.num_requests_dist is None:
             num_requests = 1
         elif num_requests is None and self.num_requests_dist is not None:
@@ -49,6 +103,14 @@ class Demand:
         return result, alloabs_mask
 
     def _add_to_total_demand(self, demands):
+        """
+        Add the generated demands to the total requested units.
+
+        Parameters
+        ----------
+        demands : ndarray or list or tuple
+            Array containing the generated demands.
+        """
         demands = np.atleast_2d(demands)
         if demands.shape[1] == 3:
             units = len(demands)
@@ -57,6 +119,21 @@ class Demand:
         self.total_requested_units += units
 
     def _setup_dummy_demand(self, data, sum_demand):
+        """
+        Setup dummy demand based on the given data and sum demand.
+
+        Parameters
+        ----------
+        data : DataFrame
+            DataFrame containing dummy demand data.
+        sum_demand : int
+            Total dummy demand to be added.
+
+        Returns
+        -------
+        ndarray
+            Array containing the dummy demand.
+        """
         if data is None or sum_demand < 1:
             return None
         units = np.round(data.iloc[:, 1].to_numpy() * sum_demand).astype(int)
@@ -77,6 +154,21 @@ class Demand:
         return result
 
     def _inject_dummy_demand(self, generated_demand, add_to_tot_demand=False):
+        """
+        Inject dummy demand into the generated demand.
+
+        Parameters
+        ----------
+        generated_demand : numpy.ndarray
+            Array containing the generated demand.
+        add_to_tot_demand : bool, optional
+            Whether to add the dummy demand to the total requested units (default is False).
+
+        Returns
+        -------
+        result: ndarray
+            Array containing the combined demand.
+        """
         if self.dummy_demand is None:
             return generated_demand
         self.dummy_demand[:, 3] = self.current_date
@@ -86,6 +178,21 @@ class Demand:
         return result
 
     def _allo_antibodies(self, num_requests, rng):
+        """
+        Generate alloantibodies mask based on the given number of requests and random number generator.
+
+        Parameters
+        ----------
+        num_requests : int
+            Number of requests.
+        rng : numpy.random.Generator
+            Random number generator.
+
+        Returns
+        -------
+        allo_mask: ndarray
+            Array containing the alloantibodies mask.
+        """
         freqs = self.antigens.alloantibody_freqs
         prob = rng.uniform(size=(num_requests, len(freqs)))
         allo_mask = prob < freqs

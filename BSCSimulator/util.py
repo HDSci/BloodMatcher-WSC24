@@ -36,7 +36,19 @@ def create_pop_phenotype_table(output_file, donor=False):
     return df2
 
 
-def population_phenotype(config_file, black_pop_ratio):
+def population_phenotype(config_file, black_pop_ratio) -> pd.DataFrame:
+    """
+    Generates a DataFrame containing phenotype decimal values and their frequencies based on the given population ratio.
+
+    Args:
+        config_file (str): Path to the JSON configuration file containing antigen information.
+        black_pop_ratio (float): Ratio of the Black population in the total population.
+
+    Returns:
+        df (DataFrame): A DataFrame with two columns:
+              - 'phenotype_decimal': Decimal representation of binary phenotypes.
+              - 'frequencies': Frequencies of the corresponding phenotypes.
+    """
     pop_ratio = np.array([[1 - black_pop_ratio], [black_pop_ratio]])
     with open(config_file) as json_file:
         antigen_info = json.load(json_file)
@@ -51,7 +63,7 @@ def population_phenotype(config_file, black_pop_ratio):
     return df
 
 
-def dummy_population_phenotypes(config_file):
+def dummy_population_phenotypes(config_file) -> pd.DataFrame:
     """Create a dummy population phenotype table.
 
     :param config_file: Path to the TSV file containing the major blood group distribution in the population.
@@ -63,6 +75,20 @@ def dummy_population_phenotypes(config_file):
 
 
 def pad_abd_phenotypes(df, padding_length):
+    """
+    Pads (in binary) the 'phenotype_decimal' column in the given DataFrame by a specified length.
+
+    This function multiplies the 'phenotype_decimal' column by 2 raised to the power of 
+    the padding length, and then adds (2 raised to the power of the padding length) minus 1 
+    to the result. This effectively pads the 'phenotype_decimal' values with 1s at the end in binary.
+
+    Parameters:
+        df (DataFrame): The DataFrame containing the 'phenotype_decimal' column to be padded.
+        padding_length (int): The length by which to pad the 'phenotype_decimal' values.
+
+    Returns:
+        df (DataFrame): The DataFrame with the padded 'phenotype_decimal' column.
+    """
     df.phenotype_decimal *= 2 ** padding_length
     df.phenotype_decimal += 2 ** padding_length - 1
     return df
@@ -97,6 +123,19 @@ def abd_usability(non_scd_freqs: ndarray, scd_requsts_ratio=330/3_500, black_pop
 
 
 def list_of_permutations(domain_list) -> list:
+    """
+    Generate a list of all possible permutations from a list of domains.
+
+    Args:
+        domain_list (list): A list of lists, where each sublist represents a domain of possible values.
+
+    Returns:
+        list: A list of lists, where each sublist is a unique permutation of values from the input domains.
+
+    Example:
+        >>> list_of_permutations([[1, 2], ['a', 'b']])
+        [[1, 'a'], [1, 'b'], [2, 'a'], [2, 'b']]
+    """
     prototype = []
     num_permutations = 1
     divisors = []

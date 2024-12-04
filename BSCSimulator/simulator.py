@@ -9,7 +9,46 @@ from tqdm import tqdm
 
 
 class SimulationManager:
+    """
+    SimulationManager is a class that manages and executes multiple simulation runs, collects statistics, and handles precomputation of simulation variables.
 
+    Attributes:
+        n (int): Number of replications for the simulation.
+        antigens (Antigens): Antigens used in the simulation.
+        demand (Demand): Demand object for the simulation.
+        supply (Supply): Supply object for the simulation.
+        matching (MatchingArea): Matching object for the simulation.
+        inventory (Inventory): Inventory function for the simulation.
+        warm_up (int): Warm-up period for the simulation.
+        horizon (int): Horizon period for the simulation.
+        cool_down (int): Cool-down period for the simulation.
+        simulations (List[Simulation]): List of completed simulation objects.
+        seed (int): Initial seed value for random number generation.
+        seeds (list of int): List of seed values used in simulations.
+        precompute_infolder (str): Folder path for precomputed input variables.
+        forecast_demand (bool): Flag indicating whether to forecast demand.
+        forecast_supply (bool): Flag indicating whether to forecast supply.
+        forecasting (dict): Parameters for how and how many days to forecast.
+        precompute_outfolder (str): Folder path for precomputed output variables.
+
+    Methods:
+    --------
+        __init__(self, antigens, demand, supply, matching, inventory, warm_up, horizon, cool_down, replications=100, seed=0xBADBEEF, precomputed_infolder=None, future_demand=False, future_supply=False, forecasting=None, precompute_outfolder=None):
+            Initializes the SimulationManager with the given parameters.
+
+        do_simulations(self):
+            Perform a series of simulations sequentially.
+
+        do_simulations_parallel(self, workers):
+
+        _pre_compute(self, i, seed):
+            Precompute random variables for a single simulation run.
+
+        do_precompute(self, workers=1):
+
+        statistics(self):
+            Collect and compute statistics from multiple simulation runs.
+    """
     def __init__(self, antigens, demand, supply, matching, inventory, warm_up, horizon, cool_down,
                  replications: int = 100, seed=0xBADBEEF, precomputed_infolder=None, future_demand=False,
                  future_supply=False, forecasting=None, precompute_outfolder=None) -> None:
@@ -33,6 +72,19 @@ class SimulationManager:
         self.precompute_outfolder = precompute_outfolder
 
     def do_simulations(self):
+        """
+        Perform a series of simulations.
+
+        This method runs a number of simulations specified by `self.n`. For each simulation, it:
+        - Updates the seed value.
+        - Generates random number generators for supply and demand.
+        - Initializes the simulation with various parameters including clocks, timing, and random number generators.
+        - Optionally sets the file path for precomputed variables.
+        - Runs the simulation and appends the result to `self.simulations`.
+
+        Returns:
+            list: A list of completed simulation objects.
+        """
         _seed = self.seed
         for i in tqdm(range(self.n)):
             if i != 0:
@@ -53,6 +105,19 @@ class SimulationManager:
         return self.simulations
 
     def do_simulations_parallel(self, workers):
+        """
+        Perform simulations in parallel using multiple workers.
+
+        Args:
+            workers (int): The number of worker processes to use for parallel execution.
+
+        Returns:
+            list: A list of simulation results.
+
+        This method initializes the random seeds, creates simulation instances, and
+        executes the simulations in parallel using a pool of worker processes. The
+        results of the simulations are stored in the `self.simulations` attribute.
+        """
         _seed = self.seed
         _to_simulate = []
         for i in range(self.n):
@@ -98,6 +163,16 @@ class SimulationManager:
         return filename
 
     def do_precompute(self, workers=1):
+        """
+        Precompute simulations using either single or multiple workers.
+
+        Args:
+            workers (int): The number of worker processes to use for parallel computation. 
+                           If workers > 1, parallel computation is used. Default is 1.
+
+        Returns:
+            out: A list of precomputed simulations.
+        """
         _seed = self.seed
         args = []
         if workers > 1:
@@ -120,6 +195,33 @@ class SimulationManager:
         return self.simulations
 
     def statistics(self):
+        """
+        Collects and computes statistics from multiple simulation runs.
+
+        This method iterates over all simulations, collects various statistics,
+        and computes mean and standard error for each statistic. It also handles
+        failed simulations by recording their seeds.
+
+        Attributes:
+            mismatches (tuple): Mean and standard error of mismatches.
+            allo (tuple): Mean and standard error of cumulative alloimmunisations.
+            subs (tuple): Mean and standard error of substitutions.
+            scd_shorts (tuple): Mean and standard error of SCD shortages.
+            stocks (tuple): Mean and standard error of inventory levels.
+            abo_cm (tuple): Mean and standard error of ABOD cross-allocations.
+            abod_mm (tuple): Mean and standard error of ABOD cross-allocations (SCD only).
+            pats_subs (tuple): Mean and standard error of patient that received at least one D/ABO/ABOD substitution.
+            objs (ndarray): Array of objective statistics.
+            ages (tuple): Mean and standard error of stock ages.
+            phen_ages (tuple): Mean and standard error of stock phenotype ages.
+            scd_ages (tuple): Mean and standard error of ages of units given to SCD patients.
+            all_shorts (tuple): Mean and standard error of all shortages.
+            computation_times (ndarray): Array of computation times for each simulation.
+            failures (dict): Dictionary containing the number of failed simulations and their seeds.
+
+        Raises:
+            None
+        """
         mismatch = []
         allo = []
         subs = []
@@ -192,6 +294,48 @@ class SimulationManager:
 
 
 class Simulation:
+    """
+    A class to simulate the operation of a blood supply chain system.
+    
+    Attributes:
+        antigens (Antigens): The antigens involved in the simulation.
+        demand (Demand): The demand object for blood units.
+        supply (Supply): The supply object for blood units.
+        matching (MatchingArea): The matching system for blood units and requests.
+        inventory (Inventoru): The inventory object for blood units.
+        warm_up (int): The warm-up period for the simulation.
+        horizon (int): The total time horizon for the simulation.
+        cool_down (int): The cool-down period for the simulation.
+        clocks (list): A list of clocks to be ticked during the simulation.
+        rng (Generator): The random number generator for the simulation.
+        time (int): The current time step of the simulation.
+        stats (dict): The statistics collected during the simulation.
+        failed (bool): A flag indicating if the simulation failed.
+        precomputed_vars (dict): Computed random variables for the simulation.
+        computed_vars_file (str): The file containing precomputed variables.
+        _loaded_vars (dict): The loaded precomputed variables.
+        _loaded_vars_strides (ndarray): The strides for the loaded variables.
+        _forecast_demand (bool): A flag indicating if demand forecasting is enabled.
+        _forecast_supply (bool): A flag indicating if supply forecasting is enabled.
+        forecast_supply_days (int): The number of days for supply forecasting.
+        forecast_supply_shows (int): The fraction of forecasted supply that actually shows up.
+        forecast_demand_days (int): The number of days for demand forecasting.
+        forecast_demand_shows (int): The fraction of forecasted demand that actually shows up.
+        _forecast_rng (Generator): The random number generator for randomising the forecast.
+        rngs (dict): A dictionary of random number generators for different processes.
+        computation_time (float): The computation time for the simulation.
+
+    Methods:
+    --------
+        simulate(): Simulates the operation of the system over a specified time horizon.
+        tick(): Advances the simulation by one time unit.
+        final_statistics(): Uses historical matches to measure mismatches, alloimmunisations, and substitutions.
+        pre_compute_random_vars(): Pre-computes random variables for the simulation.
+        _open_loaded_vars(): Opens the file containing precomputed variables.
+        _close_loaded_vars(): Closes the file containing precomputed variables.
+        get_n_days_forecast(): Retrieves the forecasted supply and demand data for a specified number of days.
+        _randomise_forecast(forecast): Randomizes the forecasted supply and demand data.
+    """
 
     def __init__(self, antigens, demand, supply, matching, inventory, warm_up, horizon, cool_down,
                  clocks=None, rng=None, forecast_demand=False, forecast_supply=False, forecasting=dict(),
@@ -226,6 +370,30 @@ class Simulation:
         self.computation_time = 0
 
     def simulate(self):
+        """
+        Simulates the operation of the system over a specified time horizon.
+
+        The simulation involves the following steps:
+        1. Open loaded variables.
+        2. Iterate through each time step until the time horizon is reached:
+            - Tick the simulation clock.
+            - Initialize inventory at time 1.
+            - Generate donated units and add them to the inventory.
+            - Measure the current stock in the inventory.
+            - Generate new requests and their associated mask.
+            - Process new requests and update the matching system.
+            - Retrieve and randomize forecasts.
+            - Apply the matching algorithm and update matches.
+            - Push updates to the inventory and remove matched requests.
+            - Track unmatched requests and remove expired units.
+            - Clear warm-up data if the warm-up period is reached.
+        3. Handle any runtime errors that occur during the simulation.
+        4. Close loaded variables.
+        5. Record the computation time for the simulation.
+
+        Raises:
+            RuntimeError: If an error occurs during the simulation process.
+        """
         start_comp_time = time.time()
         try:
             self._open_loaded_vars()
@@ -270,6 +438,12 @@ class Simulation:
         self.computation_time = time.time() - start_comp_time
 
     def tick(self):
+        """
+        Advances the simulation by one time unit.
+
+        Increments the internal time counter by one and calls the `tick` method
+        on each clock in the `clocks` list to update their state.
+        """
         self.time += 1
         for clock in self.clocks:
             clock.tick()
@@ -332,6 +506,22 @@ class Simulation:
                           abod_mm=abod_mm, pats_mm_counts=pats_mm_counts)
 
     def pre_compute_random_vars(self):
+        """
+        Pre-computes random variables for the simulation.
+
+        This method simulates the supply and demand process over the defined time horizon.
+        It initializes the inventory at the first time step and then iteratively generates
+        donated units and new requests at each subsequent time step. The results are stored
+        in the `precomputed_vars` attribute.
+
+        Attributes:
+            precomputed_vars (dict): A dictionary containing the following keys:
+                - 'start_inventory': The initial inventory at the start of the simulation.
+                - 'units': A list of donated units at each time step.
+                - 'requests': A list of new requests at each time step.
+                - 'requests_Abs': A list of alloantibody masks for new requests at each time step.
+                - 'strides': A list of tuples representing the lengths of donated units and new requests at each time step.
+        """
         starting_inventory = None
         units = []
         requests = []
@@ -377,6 +567,16 @@ class Simulation:
                 self._loaded_vars = None
 
     def get_n_days_forecast(self):
+        """
+        Retrieves the forecasted supply and demand data for a specified number of days.
+
+        Returns:
+            tuple: A tuple containing:
+                - units (ndarray): The forecasted supply data for the specified number of days.
+                - requests (tuple): A tuple containing:
+                    - requests (ndarray): The forecasted demand data for the specified number of days.
+                    - requests_Abs (ndarray): The alloantibody masks for the forecasted demand data.
+        """
         if self._loaded_vars is None or self.time >= self.horizon:
             return
         n_units = self.forecast_supply_days
@@ -430,14 +630,22 @@ class Simulation:
 
 
 def simulate(sim: Simulation) -> Simulation:
-    """Simulate a single replication of the simulation.
+    """
+    Simulate a single replication of the simulation.
 
     Wrapper function for the `simulate` method of the `Simulation` class
-    that allows for parallelisation.
-    Inserts a 0.2 second pause before executing the simulation.
+    that allows for parallelisation. Inserts a 0.2 second pause before
+    executing the simulation.
 
-    :param Simulation sim: simulation to run
-    return Simulation: the same simulation object
+    Parameters
+    ----------
+    sim : Simulation
+        The simulation to run.
+
+    Returns
+    -------
+    sim : Simulation
+        The same simulation object after running the simulation.
     """
     time.sleep(0.2)
     sim.simulate()

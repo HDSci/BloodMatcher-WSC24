@@ -2,6 +2,43 @@ import numpy as np
 
 
 class Supply:
+    """
+    A class to represent the supply of units with specific antigens.
+
+    Attributes:
+    -----------
+    antigens : list or None
+        A list of antigens or None.
+    data : DataFrame
+        A DataFrame containing supply choices and their probabilities.
+    num_units_rv : scipy.stats.rv_discrete or None
+        A random variable distribution for the number of units.
+    antigen_string : bool
+        A flag indicating if antigens are represented as strings.
+    current_date : int
+        The current date in the simulation.
+    _unit_id_ticker : int
+        A ticker for generating unique unit IDs.
+    num_units_dist : scipy.stats.rv_discrete or None
+        A random variable distribution for the number of units.
+    total_donated_units : int
+        The running total number of donated units.
+    _supply_choices : ndarray
+        An array of supply choices.
+    _supply_probabilities : ndarray
+        An array of probabilities corresponding to the supply choices.
+
+    Methods:
+    --------
+    tick():
+        Advances the current date by one.
+    _supply(rng=None, units=1) -> ndarray:
+        Generates a supply of units based on the given random number generator and number of units.
+    supply(num_units=None, rng=None):
+        Supplies the specified number of units, generating unique IDs and timestamps for each unit.
+    _add_to_total_supply(units):
+        Adds the supplied units to the total donated units count.
+    """
 
     def __init__(self, antigens=None, data=None, num_units_rv=None, antigen_string=True):
         self.antigens = antigens
@@ -25,6 +62,20 @@ class Supply:
         return np.array(result)
 
     def supply(self, num_units=None, rng=None):
+        """
+        Generate a supply of units with unique IDs and associated phenotypes.
+
+        Parameters:
+            num_units (int, optional): The number of units to supply. If None, the number of units
+                                    will be determined by `self.num_units_dist` if it is not None,
+                                    otherwise it defaults to 1.
+            rng (Generator, optional): A random number generator instance to be used
+                                                for generating random values.
+
+        Returns:
+        result (ndarray): A 2D array where each row represents a unit with columns for unit ID,
+                          phenotype, and the current date.
+        """
         if num_units is None and self.num_units_dist is None:
             num_units = 1
         elif num_units is None and self.num_units_dist is not None:

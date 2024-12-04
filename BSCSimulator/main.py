@@ -1,3 +1,23 @@
+"""
+Main module for running different experiments in the BSCSimulator.
+
+This module sets up logging, parses command-line arguments, and runs the appropriate
+experiment based on the configuration specified in the `parameters` module of the
+`experiments` package.
+
+Functions:
+    main(): Entry point for the script. Determines which experiment to run based on
+            the `param.main_func` value and executes it with the appropriate parameters.
+
+Raises:
+    Exception: Logs any exception that occurs during the execution of the main function.
+    KeyboardInterrupt: Logs if the script is interrupted by the user.
+
+Usage:
+    Run this script from the command line as a module within the BSCSimulator package,
+    passing any additional arguments to the main function.
+"""
+
 import datetime
 import logging
 import sys

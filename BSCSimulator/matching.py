@@ -1,5 +1,9 @@
-"""Classes for matching platform/area and algorithms."""
+"""
+This module contains classes and functions for matching platform/area and algorithms.
 
+Classes:
+    MatchingArea: A class that handles the matching of requests to inventory based on various algorithms and rules.
+"""
 
 import warnings
 
@@ -17,6 +21,28 @@ class MatchingArea:
     def __init__(
             self, algo=None, antigens: Antigens = None, matching_rule='ABOD', anticipation=False, cost_weights=None,
             solver='POT', young_blood_constraint=True, substitution_penalty_parity=True) -> None:
+        """
+        Initialize the MatchingArea object.
+        
+        Parameters:
+            algo: str, optional
+                The matching algorithm to use (default is None).
+            antigens: Antigens, optional
+                The antigens data (default is None).
+            matching_rule: str, optional
+                The matching rule to use (default is 'ABOD').
+            anticipation: bool, optional
+                Whether to use anticipation and/or forecasting (default is False).
+            cost_weights: np.ndarray, optional
+                The weights for the cost function (default is None).
+            solver: str, optional
+                The solver to use for the matching algorithm (default is 'POT').
+            young_blood_constraint: bool, optional
+                Whether to apply the young blood constraint (default is True).
+            substitution_penalty_parity: bool, optional
+                Whether to use equal weight for major antigen substitution and sum of substitutions (default is True).
+
+        """
         self.current_date = 0
         # ID demand, supply, date, type demand, supply
         self.matches = np.empty((0, 5), dtype=int)
@@ -65,9 +91,27 @@ class MatchingArea:
         self.d_mm_pat_counts = 0
 
     def tick(self):
+        """
+        Advances the current date by one unit.
+
+        This method increments the `current_date` attribute by 1, simulating the passage of one time unit in the simulation.
+        """
         self.current_date += 1
 
     def track_unmatched_requests(self):
+        """
+        Tracks and logs the requests that have not been matched.
+
+        This method checks if there are any pending requests. If there are, it appends
+        the current date to each pending request and then adds these requests to the 
+        list of immediately unmet requests.
+
+        Attributes:
+            pending_requests (ndarray): Array of pending requests.
+            current_date (datetime): The current date.
+            immediately_unmet_requests (ndarray): Array to store unmet requests 
+                                                         with their corresponding dates.
+        """
         if self.pending_requests.size == 0:
             return
         time = np.full(len(self.pending_requests), self.current_date)[:, None]
@@ -76,15 +120,39 @@ class MatchingArea:
             (self.immediately_unmet_requests, unmet_requests))
 
     def remove_matched_requests(self):
+        """
+        Remove matched requests from the pending requests list.
+
+        This method filters out all the requests from `self.pending_requests`.
+        """
         i = self.pending_requests[:, 4] < 0
         self.pending_requests = self.pending_requests[i]
         self.pr_allo_abs = self.pr_allo_abs[i]
 
     def get_inventory(self, inventory):
+        """
+        Copies the store inventory to an instance variable.
+
+        Args:
+            inventory (Inventory): An object that contains the store inventory.
+
+        Attributes:
+            copy_of_inventory (ndarray): A copy of the store inventory.
+        """
         store = inventory.store.copy()
         self.copy_of_inventory = store
 
     def receive_new_requests(self, demand, abs_mask=None):
+        """
+        Receives new requests and updates the pending requests and allocation masks.
+
+        Parameters:
+        demand (array-like): The new demand requests to be added. It should be at least 2-dimensional.
+        abs_mask (array-like, optional): The antibody mask for the new requests. If not provided, a default mask of False values will be created.
+
+        Returns:
+        None
+        """
         demand = np.atleast_2d(demand)
         if demand.size <= 0:
             return
@@ -99,6 +167,15 @@ class MatchingArea:
         self.pr_allo_abs = np.vstack((self.pr_allo_abs, abs_mask))
 
     def get_forecasts(self, units, requests):
+        """
+        Updates the forecasted units and requests.
+
+        Parameters:
+            units (ndarray): The array of forecasted units.
+            requests (tuple): A tuple containing two numpy arrays:
+                - requests[0] (ndarray): The array of forecasted requests.
+                - requests[1] (ndarray): The array of absolute allocations.
+        """
         self.forecast_units = units.copy()
         padding_shape = (requests[0].shape[0], 1)
         padding = np.zeros(padding_shape, dtype=int)
@@ -111,7 +188,23 @@ class MatchingArea:
         elif self.matching_algo == 'transport':
             return self.transport_matching()
 
-    def default_matching(self):
+    def default_matching(self) -> list:
+        """
+        Perform the default matching of pending requests with available inventory.
+
+        This method matches pending requests with available inventory
+        one-by-one based only on antigen compatibility.
+        For each request, it finds all available units that are compatible with the request's antigen.
+        It then matches the request with the first available units until the request is fulfilled. 
+
+        Returns:
+            list: A list of matches, where each match is represented as a list containing:
+                - request ID
+                - matched unit ID
+                - current date
+                - request antigen
+                - matched unit antigen
+        """
         matches = []
         free_inventory = np.full(len(self.copy_of_inventory), True)
         inv_index = np.arange(len(free_inventory))
@@ -135,7 +228,34 @@ class MatchingArea:
         self._todays_matches = np.array(matches)
         return matches
 
-    def transport_matching(self, shelf_life=35, max_young_blood=14, solver=None):
+    def transport_matching(self, shelf_life=35, max_young_blood=14, solver=None) -> np.ndarray:
+        """
+        Perform transport matching to allocate blood units to requests based on
+        matching rule, penalties, and constraints.
+
+        Parameters:
+        -----------
+            shelf_life : int, optional
+                The shelf life of blood units in days. Default is 35.
+            max_young_blood : int, optional
+                The maximum age of blood units considered as "young blood" in days. Default is 14.
+            solver : str, optional
+                The solver to use for the transport matching problem. Default is None, which uses the instance's solver.
+
+        Returns:
+        --------
+            matches: ndarray
+                An array of matches where each match is represented by a combination of request and unit details.
+
+        Raises:
+        -------
+            ValueError
+                If an unknown solver is specified.
+            RuntimeError
+                If the transport solver does not find an optimum solution.
+            AssertionError
+                If the solution contains incompatible matches.
+        """
         matches = []
         if self.pending_requests.size == 0:
             self._todays_matches = np.array(matches)
@@ -340,6 +460,12 @@ class MatchingArea:
         return self.matches
 
     def warmup_clear(self):
+        """
+        Clear the data from the warmup period.
+        
+        This method clears the data from the warmup period, including the matches, pending requests, 
+        immediately unmet requests, and other running totals/statistics.
+        """
         # ID demand, supply, date, type demand, supply
         self.matches = np.empty((0, 5), dtype=int)
         self.pending_requests = np.empty(
@@ -361,6 +487,7 @@ class MatchingArea:
         self.d_mm_pat_counts = 0
 
     def clear_forecasts(self):
+        """Clear the forecasted units and requests."""
         self.forecast_units = np.empty(shape=(0, 3), dtype=int)
         self.forecast_requests = np.empty(
             shape=(0, 5), dtype=int)  # 5th column = matched or not
@@ -368,6 +495,7 @@ class MatchingArea:
             shape=(0, len(self.antigens.alloantibody_freqs)), dtype=bool)
 
     def push_update_to_inventory(self, inventory):
+        """Push the matches from the current day to the inventory."""
         if self._todays_matches.size <= 0:
             return
         i = np.isin(
@@ -389,6 +517,7 @@ class MatchingArea:
         return subs
 
     def _measure_abod_crossmatch(self, i, j, units_phen, reqs_phen, remove_dummy_demand=True):
+        """Measure the number of allocations between each major ABO-RhD blood type combination."""
         if remove_dummy_demand:
             i = i[self._todays_matches[:, 0] >= 0]
             j = j[self._todays_matches[:, 0] >= 0]
