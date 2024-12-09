@@ -6,6 +6,27 @@ cnp.import_array()
 
 
 def mincostflow(cnp.ndarray supply, cnp.ndarray demand, cnp.ndarray cost, cnp.ndarray scaled_cost):
+    """
+    mincostflow
+
+    Parameters
+    ----------
+    supply : cnp.ndarray
+        An array representing the supply at each node.
+    demand : cnp.ndarray
+        An array representing the demand at each node.
+    cost : cnp.ndarray
+        A 2D array representing the cost of transporting goods between nodes.
+    scaled_cost : cnp.ndarray
+        A 2D array representing the scaled cost of transporting goods between nodes.
+        'Scaled' means that the range of values is made smaller to avoid numerical issues.
+        Large costs that represent infeasible connections have been made much smaller.
+        All other costs have been multiplied by 1000. And will be multiplied again by 1000.
+
+    Returns
+    -------
+    None
+    """
     cdef int n = supply.size
     cdef int m = demand.size
     cdef int tot = max(supply.sum(), demand.sum())
@@ -17,6 +38,27 @@ def mincostflow(cnp.ndarray supply, cnp.ndarray demand, cnp.ndarray cost, cnp.nd
 
 
 def maxflow_mincost(cnp.ndarray supply, cnp.ndarray demand, cnp.ndarray cost, cnp.ndarray scaled_cost):
+    """
+        maxflow_mincost
+
+        Parameters
+        ----------
+        supply : cnp.ndarray
+            An array representing the supply at each node.
+        demand : cnp.ndarray
+            An array representing the demand at each node.
+        cost : cnp.ndarray
+            A 2D array representing the cost of transporting goods between nodes.
+        scaled_cost : cnp.ndarray
+            A 2D array representing the scaled cost of transporting goods between nodes.
+            'Scaled' means that the range of values is made smaller to avoid numerical issues.
+            Large costs that represent infeasible connections have been made much smaller.
+            All other costs have been multiplied by 1000. And will be multiplied again by 1000.
+
+        Returns
+        -------
+        None
+    """
     cdef int n = supply.size
     cdef int m = demand.size
     cdef int tot = max(supply.sum(), demand.sum())

@@ -40,6 +40,21 @@ def receivability(supply, demand):
 
 
 def sum_of_substitutions(supply, demand, weights=None):
+    """
+    Calculate the sum of substitutions between each unit in the supply array
+    and each request in the demand array. The sum of substitutions is normalised
+    by the `weights` argument.
+
+    Parameters:
+        supply (array-like): The supply array. It will be converted to at least 2D.
+        demand (array-like): The demand array. It should be a 2D array.
+        weights (array-like, optional): The weights for each demand column. If None, 
+                                        weights will be set to an array of ones with 
+                                        the same length as the number of columns in demand.
+
+    Returns:
+        substitutions (ndarray): The sum of substitutions for each row in the demand array.
+    """
     assert len(demand.shape) == 2
     weights = np.ones(demand.shape[1]) if weights is None else weights
     substitution_norm = weights.sum()
@@ -52,6 +67,18 @@ def sum_of_substitutions(supply, demand, weights=None):
 
 
 def immunogenicity(supply, demand, risk):
+    """
+    Calculate the immunogenicity metric based on supply, demand, and risk.
+    Parameters:
+        supply (ndarray): A 2D array representing the supply phenotypes.
+        demand (ndarray): A 2D array representing the demand phenotypes.
+        risk (ndarray): A 1D array representing the immune risk values.
+    Returns:
+        immunogenicity (ndarray): An array representing the immunogenicity metric.
+    Raises:
+        AssertionError: If the demand array does not have exactly 2 dimensions.
+    """
+    
     assert len(demand.shape) == 2
     risk_norm = risk.sum()
     supply = np.atleast_2d(supply)
@@ -73,6 +100,19 @@ def opportunity_cost(supply, demand, normalised=True):
 
 
 def major_antigen_substitution(supply, demand, population=False, pop_frequencies=None):
+    """
+    Calculate the major antigen substitution penalty between supply and demand phenotypes.
+
+    Parameters:
+        supply (array-like): The supply data, representing the the supply phenotypes.
+        demand (array-like): The demand data, representing the demand phenotypes.
+        population (bool, optional): If True, compute usability using population frequencies instead of current demand.
+            Defaults to False.
+        pop_frequencies (array-like, optional): Population frequencies to be used if population is True. Defaults to None.
+
+    Returns:
+        mas (ndarray): The major antigen substitution matrix.
+    """
     if population:
         Fsi = pop_phenotype_usability(supply, pop_frequencies)
         Fsj = pop_phenotype_usability(demand, pop_frequencies)

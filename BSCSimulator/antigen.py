@@ -11,11 +11,56 @@ DEFAULT_VECTOR_LENGTH = 2 ** 5
 
 
 class Antigens:
+    '''
+    A class to represent antigens and perform various operations related to them.
+    Attributes:
+        population_frequencies (pd.DataFrame): Population frequencies of antigens.
+        population_abd_usabilities (pd.DataFrame): Usabilities of antigens in the population.
+    
+    Methods:
+        
+        __init__(antigens: List, antigen_order=None, alloimmunisation_risk=None, rule=None, allo_Abs=None) -> None:
+            Initializes the Antigens object with the given parameters.
+        _setup_antigen_dict(antigens, antigen_order=DEFAULT_ANTIGEN_ORDER, length=DEFAULT_VECTOR_LENGTH) -> dict:
+        _setup_convert_to_binarray() -> None:
+            Sets up the binary arrays for the antigen by converting a range of integers to their corresponding binary representations.
+        convert_to_binarray(a: Union[int, List[int]]) -> np.ndarray:
+            Converts an integer or a list of integers to a binary array representation.
+        _convert_to_binarray(a) -> np.ndarray:
+            Converts an integer or a list of integers to a binary array representation.
+        binarray_to_int(phen_array) -> np.ndarray | int:
+            Converts a binary array to an integer or an array of integers.
+        read_population_frequencies(cls, input_file='BSCSimulator/population_phenotype_frequencies.tsv') -> None:
+            Reads population frequencies from a file and stores them in the class attribute.
+    '''
     population_frequencies = None
     population_abd_usabilities = None
 
-    def __init__(self, antigens: List, antigen_order=None, alloimmunisation_risk=None, rule=None,
-                 allo_Abs=None) -> None:
+    def __init__(self, antigens: List, antigen_order=None, alloimmunisation_risk=None, rule=None, allo_Abs=None) -> None:
+        """
+        Initialize an Antigen object.
+
+        Parameters:
+            antigens (List): A list of antigens.
+            antigen_order (List, optional): The order of antigens. Defaults to DEFAULT_ANTIGEN_ORDER.
+            alloimmunisation_risk (List, optional): The risk of alloimmunisation. Defaults to an array of ones.
+            rule (List, optional): A list of rules for matching antigens.
+            allo_Abs (List, optional): Frequencies of alloantibodies.
+
+        Attributes:
+            antigens (List): A list of antigens.
+            antigen_order (List): The order of antigens.
+            vector_length (int): The length of the antigen vector.
+            mask (int): A bitmask for the antigen vector.
+            reference (dict): A dictionary mapping antigens to their indices.
+            antigen_index (List): A list of antigen indices.
+            allo_risk (List): The risk of alloimmunisation.
+            matching_antigens (List): A list of antigens that match the given rule.
+            major_mask (List): A list indicating major antigens ('A', 'B', 'D').
+            minor_mask (List): A list indicating minor antigens not in ['A', 'B', 'D'] but in the rule.
+            rhkell_mask (List): A list indicating Rh and Kell antigens ('C', 'c', 'E', 'e', 'K').
+            alloantibody_freqs (List): Frequencies of alloantibodies.
+        """
         self.antigens = antigens
         self.antigen_order = DEFAULT_ANTIGEN_ORDER if antigen_order is None else antigen_order
         self.vector_length = len(antigens)
@@ -36,6 +81,19 @@ class Antigens:
         self._setup_convert_to_binarray()
 
     def _setup_antigen_dict(self, antigens, antigen_order=DEFAULT_ANTIGEN_ORDER, length=DEFAULT_VECTOR_LENGTH):
+        """
+        Sets up a dictionary mapping antigens to unique power-of-two values.
+
+        Args:
+            antigens (list): A list of antigens to be included in the dictionary.
+            antigen_order (list, optional): A list of antigens that defines the order of precedence.
+                Defaults to DEFAULT_ANTIGEN_ORDER.
+            length (int, optional): The length of the vector, which determines the highest power of two.
+                Defaults to DEFAULT_VECTOR_LENGTH.
+
+        Returns:
+            out (dict): A dictionary where keys are antigens and values are unique power-of-two integers.
+        """
         power = int(length - 1)
         ant_dict = dict()
         _antigens = list(antigen_order) + antigens
@@ -47,6 +105,16 @@ class Antigens:
         return ant_dict
 
     def _setup_convert_to_binarray(self):
+        """
+        Sets up the binary arrays for the antigen by converting a range of integers
+        (from 0 to 2^vector_length - 1) to their corresponding binary representations.
+
+        This method initializes the `_binarrays` attribute with the result of the
+        `_convert_to_binarray` method, which takes a list of integers and converts
+        each integer to its binary representation.
+
+        The length of the binary arrays is determined by the `vector_length` attribute.
+        """
         self._binarrays = self._convert_to_binarray(
             [i for i in range(2 ** self.vector_length)])
 
@@ -68,72 +136,50 @@ class Antigens:
                 f'Parameter base must be "neg" or "pos" only, got "{base}" instead.')
 
     def convert_to_binarray(self, a: Union[int, List[int]]) -> np.ndarray:
+        """
+        Convert an integer or a list of integers to a binary array.
+        
+        Looks up the binary array representation of the input integer(s) in the precomputed
+        binary arrays and returns the corresponding binary array(s).
+
+        Parameters:
+            a (int or list of int): An integer or a list of integers to be converted.
+
+        Returns:
+            binarray (ndarray): A numpy array representing the binary form of the input.
+        """
         return self._binarrays[a]
 
     def _convert_to_binarray(self, a):
+        """
+        Convert an integer or a list of integers to a binary array representation.
+
+        Parameters:
+            a (int or list of int): An integer or a list of integers to be converted.
+
+        Returns:
+            binarray (ndarray): A binary array representation of the input integer(s).
+        """
         if isinstance(a, int):
             return np.array(binarray(a, self.vector_length))
         else:
             return np.array([binarray(i, self.vector_length) for i in a])
 
-    def convert_to_symbols(self, a, abo=True):
-        array = np.atleast_2d(self.convert_to_binarray(a))
-        array = (array == 1)[:, :len(self.antigen_index)]
-        antigen_index = np.array([sym + '+' for sym in self.antigen_index])
-        symbols = [list(antigen_index[row]) for row in array]
-        if not abo:
-            return symbols
-        for person in symbols:
-            abod = ''
-            a_or_b = False
-            if 'A+' in person:
-                person.remove('A+')
-                abod += 'A'
-                a_or_b = True
-            if 'B+' in person:
-                person.remove('B+')
-                abod += 'B'
-                a_or_b = True
-            if not a_or_b:
-                abod += 'O'
-            if 'D+' in person:
-                abod += '+'
-                person.remove('D+')
-            else:
-                abod += '-'
-            person.insert(0, abod)
-        return symbols
+    def binarray_to_int(self, phen_array) -> np.ndarray | int:
+        """
+        Convert a binary array to an integer or an array of integers.
 
-    def convert_to_full_symbols(self, a, abo=True):
-        array = np.atleast_2d(self.convert_to_binarray(a))[
-            :, :len(self.antigen_index)]
-        num_phens = len(array)
-        ant_pos_template = [s + '+' for s in self.antigen_index]
-        ant_neg_template = [s + '-' for s in self.antigen_index]
-        ant_pos_template = np.vstack((ant_pos_template,) * num_phens)
-        ant_neg_template = np.vstack((ant_neg_template,) * num_phens)
-        symbols = np.full(array.shape, '', np.dtype(('U', 6)))
-        symbols[array == 1] = ant_pos_template[array == 1]
-        symbols[array == 0] = ant_neg_template[array == 0]
-        if not abo:
-            return symbols
-        abd_symbols = np.full((array.shape[0], 3), '', np.dtype(('U', 6)))
-        abd_template = np.vstack((['A', 'B'],) * num_phens)
-        dpos_template = np.full((num_phens, 1), '+', np.dtype(('U', 6)))
-        dneg_template = np.full((num_phens, 1), '-', np.dtype(('U', 6)))
-        abd_symbols[:, :2][array[:, :2] == 1] = abd_template[array[:, :2] == 1]
-        abd_symbols[:, 2:][array[:, 2:3] ==
-                           1] = dpos_template[array[:, 2:3] == 1]
-        abd_symbols[:, 2:][array[:, 2:3] ==
-                           0] = dneg_template[array[:, 2:3] == 0]
-        abd_symbols = np.char.add(np.char.add(
-            abd_symbols[:, 0:1], abd_symbols[:, 1:2]), abd_symbols[:, 2:3])
-        abd_symbols[abd_symbols == '+'] = 'O+'
-        abd_symbols[abd_symbols == '-'] = 'O-'
-        symbols = np.hstack((abd_symbols, symbols[:, 3:]))
-        return symbols
+        This method takes a binary array and converts it to its corresponding integer
+        representation. If the input is a 2D array, it returns an array of integers.
 
-    def binarray_to_int(self, phen_array):
+        Args:
+            phen_array (ndarray):
+                A binary array where each row represents a binary number.
+
+        Returns:
+            array (ndarray or int):
+                An integer or an array of integers corresponding to the binary input.
+        """
         pows = np.arange(len(self.antigen_index) - 1, -1, -1)
         bin_pows = 2 ** pows
         ints = phen_array.dot(bin_pows[:, None])
@@ -145,47 +191,55 @@ class Antigens:
         cls.population_frequencies = pd.read_csv(input_file, sep='\t')
 
 
-def binarray(a: int, w: int = 8):
+def binarray(a: int, w: int = 8) -> List[int]:
+    """
+    Convert an integer to a binary array representation.
+
+    Args:
+        a (int): The integer to be converted.
+        w (int, optional): The width of the binary representation. Defaults to 8.
+
+    Returns:
+        List[int]: A list of integers representing the binary digits of the input integer.
+    """
     b = [int(i) for i in f'{a:0{w}b}']
     return b
 
 
-def count_set_bits(n: int):
-    count = 0
-    while (n):
-        n &= (n - 1)
-        count += 1
-    return count
+def bnot(a: int, m: int = 0) -> int:
+    """
+    Perform a bitwise NOT operation on an integer with an optional mask.
 
+    Args:
+        a (int): The integer to perform the bitwise NOT operation on.
+        m (int, optional): The mask to apply after the NOT operation. If not provided or set to 0,
+                           the mask will be set to cover all bits of `a`.
 
-def bnot(a: int, m: int = 0):
+    Returns:
+        int: The result of the bitwise NOT operation, masked by `m`.
+    """
     if m == 0:
         m = 2 ** a.bit_length() - 1
     return ~a & m
 
 
-def not_compatible(a: int, b: int, m: int = 0):
+def not_compatible(a: int, b: int, m: int = 0) -> int:
+    """
+    Determines if two phenotypes (represented by integers) are not compatible.
+
+    Args:
+        a (int): The first phenotype - from the recipient.
+        b (int): The second phenotype - from the donor.
+        m (int, optional): The mask to apply to the first integer.
+            Needs to be the largest integer that can be used in the phenotype representation.
+            I.e., (2 ^ num_antigens) - 1.
+            Defaults to 0.
+
+    Returns:
+        int: Zero if the phenotypes are compatible, otherwise a non-zero integer.
+    """
     return bnot(a, m) & b
 
 
-def counts_to_cumulative(counts: np.ndarray):
-    mask = counts > 0
-    non_zero_counts = counts[mask]
-    return np.cumsum(non_zero_counts, dtype=np.int32)
-
-
-def get_set_bits_indexes(a: np.ndarray, cum_counts: Union[List[int], np.ndarray]):
-    a = a == 1
-    antigens = np.array([np.arange(a.shape[1]) for _ in range(a.shape[0])])
-    unpartitioned_antigens = antigens[a]
-    partitioned_antigens = np.split(unpartitioned_antigens, cum_counts)
-    return partitioned_antigens
-
-
 if __name__ == "__main__":
-    people_phen = [np.random.randint(0, 2 ** 7) for _ in range(5)]
-    people_counts = np.array([count_set_bits(i) for i in people_phen])
-    people_cum_counts = counts_to_cumulative(people_counts)
-    people_bin_arrs = np.array([binarray(i, 7) for i in people_phen])
-    people_bit_indices = get_set_bits_indexes(
-        people_bin_arrs, people_cum_counts)
+    pass

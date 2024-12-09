@@ -1,27 +1,23 @@
+"""Docstring for scratch.convenience_functions.py
+
+This module contains convenience functions for plotting and analysing data from the blood supply chain model/simulation.
+"""
+
 import os
 
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mtick
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import matplotlib.ticker as mtick
 
 
-def alloimmunisation_stats(file_path):
-    output_df = pd.read_csv(file_path, sep='\t', index_col=0)
-    allo_stat = output_df.loc['allo_avg', :].sum(), np.sqrt(
-        ((output_df.loc['allo_stderr', :]).to_numpy()**2).sum())
-    return allo_stat
+def objectives_stats(file_path) -> list[tuple[float]]:
+    """Calculate the mean and standard error of the mean for each objective (column).
 
-
-def stats(file_path, stat='allo'):
-    output_df = pd.read_csv(file_path, sep='\t', index_col=0)
-    out_stat = output_df.loc[f'{stat}_avg', :].sum(), np.sqrt(
-        ((output_df.loc[f'{stat}_stderr', :]).to_numpy()**2).sum())
-    return out_stat
-
-
-def objectives_stats(file_path):
+        :param str file_path: The path to the objectives TSV file.
+        :return list: A list of tuples where each tuple contains the mean and standard error of the mean for a column.
+    """
     output_df = pd.read_csv(file_path, sep='\t')
     columns = list(output_df.columns)
     return_value = []
@@ -31,7 +27,21 @@ def objectives_stats(file_path):
     return return_value
 
 
-def objectives_stats_table(files: dict, separate_vals_errs=False):
+def objectives_stats_table(files: dict, separate_vals_errs=False) -> tuple[pd.DataFrame, tuple[pd.DataFrame, pd.DataFrame]] | pd.DataFrame:
+    """
+    Generates a table of objective statistics from a dictionary of file paths.
+    Args:
+        files (dict): A dictionary where keys are identifiers and values are file paths.
+        separate_vals_errs (bool, optional): If True, returns separate DataFrames for values and errors. 
+            Defaults to False.
+    Returns:
+        tuple[DataFrame, tuple[DataFrame, DataFrame]] | DataFrame: 
+            If separate_vals_errs is False, returns a single DataFrame with formatted statistics.
+            If separate_vals_errs is True, returns a tuple containing:
+                - A DataFrame with formatted statistics.
+                - A tuple of two DataFrames: one for values and one for errors.
+    """
+
     data_dict = dict()
     val_dict = dict()
     err_dict = dict()
@@ -46,7 +56,7 @@ def objectives_stats_table(files: dict, separate_vals_errs=False):
         val_dict[key] = objstats_arr[:, 0]
         err_dict[key] = objstats_arr[:, 1]
     df = pd.DataFrame(data_dict, index=['alloimmunisations', 'scd_shortages',
-                      'expiries', 'all_shortages', 'O_neg_level', 'O_pos_level', 'O_level',
+                                        'expiries', 'all_shortages', 'O_neg_level', 'O_pos_level', 'O_level',
                                         'D_subs_num_patients', 'ABO_subs_num_patients', 'ABOD_subs_num_patients'])
     if separate_vals_errs:
         df_val = pd.DataFrame(val_dict, index=['alloimmunisations', 'scd_shortages',
@@ -59,7 +69,24 @@ def objectives_stats_table(files: dict, separate_vals_errs=False):
     return df
 
 
-def read_and_average_comp_times(files: dict):
+def read_and_average_comp_times(files: dict) -> pd.DataFrame:
+    """
+    Reads computation time files, calculates the mean and standard deviation, and returns a DataFrame.
+
+    This function processes a dictionary of file paths, reads the computation times from each file,
+    calculates the mean and standard deviation for each set of times, and stores the results in a
+    pandas DataFrame.
+
+    Args:
+        files (dict): A dictionary where keys are identifiers and values are file paths to the computation
+                      time files. The file paths should end with '_output.tsv', which will be replaced
+                      with '_computation_times.tsv' to locate the actual computation time files.
+
+    Returns:
+        DataFrame: A DataFrame with the mean and standard deviation of computation times for each file.
+                   The DataFrame has one row labeled 'computation_time' and columns corresponding to
+                   the keys in the input dictionary. The values are formatted as 'mean ± std_dev'.
+    """
     data_dict = dict()
     for key, value in files.items():
         if value.endswith('_output.tsv'):
@@ -73,69 +100,28 @@ def read_and_average_comp_times(files: dict):
     return df
 
 
-def objectives_stats_comparison_chart(files: dict, baseline: str, figsize=(12, 8), dpi=200, rows=None, cols=None):
-    _, (df_val, df_err) = objectives_stats_table(
-        files, separate_vals_errs=True)
-
-    # Calculate percent change from baseline for df_val and df_err
-    df_val_pct_change = df_val.div(df_val[baseline], axis=0) - 1
-    # df_err_pct_change = df_err.div(df_err[baseline], axis=0) - 1
-
-    # Calculate the error propagation
-    df_err_pct_change = (df_val_pct_change + 1) * ((df_err / df_val)
-                                                   ** 2 + (df_err[baseline] / df_val[baseline]) ** 2) ** 0.5
-
-    # Drop the baseline column
-    df_val_pct_change = df_val_pct_change.fillna(0)
-    df_err_pct_change = df_err_pct_change.fillna(0)
-    df_val_pct_change = df_val_pct_change.drop(baseline, axis=1)
-    df_err_pct_change = df_err_pct_change.drop(baseline, axis=1)
-
-    # Transpose the dataframes for plotting
-    df_val_pct_change = df_val_pct_change.transpose()
-    df_err_pct_change = df_err_pct_change.transpose()
-
-    # Create a color palette
-    colours = sns.color_palette('deep', df_val_pct_change.shape[1])
-
-    # Create a subplot for each objective
-    rows = df_val_pct_change.shape[1] if rows is None else rows
-    cols = 1 if cols is None else cols
-    fig, axs = plt.subplots(rows, cols, figsize=figsize, dpi=dpi)
-    for i, (objective, ax) in enumerate(zip(df_val_pct_change.columns, axs.flatten())):
-        df_val_pct_change[objective].plot(
-            kind='bar', yerr=df_err_pct_change[objective], ax=ax, color=colours[i])
-        ax.set_ylabel('Percent Change')
-        # ax.set_xlabel('Scenario')
-        ax.grid(axis='y')
-        ax.set_title(f'Percent Change in {objective} Relative to Baseline')
-
-        # Set the x-label only for the last subplots
-        if i/cols >= rows - 1:
-            ax.set_xlabel('Objective')
-        else:
-            ax.set_xticklabels([])
-
-        # Format the y-axis as percentages
-        ax.yaxis.set_major_formatter(mtick.PercentFormatter(1.0))
-
-    fig.tight_layout()
-
-    return fig, axs
-
-
 def exp2_figs(abod, limited, extended, prob_neg_phen=1, figsize=None, labels=['ABOD', 'Limited', 'Extended'],
               colours=['C0', 'C1', 'C2'], ylabels=None, pdfs=None, skip_plots=False):
-    """Figures for Experiment 2
-
-    :param abod:
-    :param limited:
-    :param extended:
-    :param prob_neg_phen:
-    :param figsize:
-    :return:
     """
+    Create a series of bar graphs for the expected number of mismatches, substitutions, and alloimmunisations
+    for the three matching rules.
 
+    Args:
+        abod (str): Path to the ABOD (or the first) file.
+        limited (str): Path to the Limited (or the second) file.
+        extended (str): Path to the Extended (or the third) file.
+        prob_neg_phen (float, optional): Deprecated, fixed to 1. Defaults to 1.
+        figsize (tuple, optional): Size of the figure. Defaults to None.
+        labels (list, optional): Labels for the three matching rules. 
+            Defaults to ['ABOD', 'Limited', 'Extended'].
+        colours (list, optional): Colours for the three matching rules. 
+            Defaults to ['C0', 'C1', 'C2'].
+        ylabels (list, optional): Labels for the y-axis. Defaults to None.
+        pdfs (list, optional): Paths to save the figures as PDFs. Defaults to None.
+        skip_plots (list, optional): List of booleans to skip plots. Defaults to False.
+    Returns:
+        None
+    """
     abod_df = pd.read_csv(abod, sep='\t', index_col=0)
     limited_df = pd.read_csv(limited, sep='\t', index_col=0)
     extended_df = pd.read_csv(extended, sep='\t', index_col=0)
@@ -186,171 +172,30 @@ def exp2_figs(abod, limited, extended, prob_neg_phen=1, figsize=None, labels=['A
             plt.close(fig)
 
 
-def exp3_figs(limited, extended, prob_neg_phen=1, figsize=(12, 8), labels=['Limited', 'Extended']):
-
-    limited_df = pd.read_csv(limited, sep='\t', index_col=0)
-    extended_df = pd.read_csv(extended, sep='\t', index_col=0)
-
-    labels_mismatch = ["A", "B", "D", "C", "c", "E", "e", "K",
-                       "k", "Fya", "Fyb", "Jka", "Jkb", "M", "N", "S", "s"]
-    labels_allo = labels_mismatch[3:]
-    x1 = np.arange(len(labels_mismatch))
-    x2 = np.arange(len(labels_allo))
-    width = 0.35
-
-    x = [x2, x2, x2]
-    met = ['mismatch', 'subs', 'allo']
-    ylabel = ['Number of mismatches', 'Expected number of substitutions',
-              'Expected number of alloimmunisations']
-    title = ['Mismatches in antigen-negative patients by antigen and matching rule', 'Substitutions per unit transfused by antigen and matching rule',
-             'Alloimmunisations by antigen and matching rule']
-    xticks = [labels_allo, labels_allo, labels_allo]
-    cols = xticks
-
-    for i in range(len(x)):
-        if met[i] == 'subs':
-            _neg_phen = 1
-        else:
-            _neg_phen = prob_neg_phen
-        fig, ax = plt.subplots(figsize=figsize, dpi=200)
-        ax.bar(x[i] - width/2, limited_df.loc[met[i] + '_avg', cols[i]].to_numpy() / _neg_phen, width, label=labels[0],
-               yerr=limited_df.loc[met[i] + '_stderr', cols[i]].to_numpy() / _neg_phen, color='tab:blue')
-        ax.bar(x[i] + width/2, extended_df.loc[met[i] + '_avg', cols[i]].to_numpy() / _neg_phen, width, label=labels[1],
-               yerr=extended_df.loc[met[i] + '_stderr', cols[i]].to_numpy() / _neg_phen, color='tab:green')
-        ax.set_ylabel(ylabel[i])
-        ax.set_xticks(x[i])
-        ax.set_xticklabels(xticks[i])
-        ax.legend()
-        fig.tight_layout()
-        plt.show()
-
-
-def create_histogram_panels(data1, data2, data3):
-    # Create a figure with three subplots
-    fig, axes = plt.subplots(nrows=3, ncols=1, figsize=(8, 12), sharex=True)
-
-    # Plot histogram for dataset 1
-    axes[0].hist(data1, bins=20, color='blue', alpha=0.5)
-    axes[0].set_title('Limited Rule')
-
-    # Plot histogram for dataset 2
-    axes[1].hist(data2, bins=20, color='green', alpha=0.5)
-    axes[1].set_title('Extended Rule')
-
-    # Plot histogram for dataset 3
-    axes[2].hist(data3, bins=20, color='red', alpha=0.5)
-    axes[2].set_title('Optimised Extended Rule')
-
-    # Label axes
-    for ax in axes:
-        ax.set_ylabel('Frequency')
-    axes[2].set_xlabel('Total expected alloimmunisations')
-
-    # Adjust spacing between subplots
-    fig.tight_layout()
-
-    # Display the chart
-    plt.show()
-
-
-def create_histograms(data1, data2, data3, xlabel='Total expected alloimmunisations', title='Distribution of total expected alloimmunisations',
-                      labels=['Limited Rule', 'Extended Rule', 'Extended Anticipation Rule'], density=False, xlim=None):
-    # Create a figure and axes for the panel
-    fig, ax = plt.subplots(figsize=(8, 6), dpi=200)
-
-    # Using seaborn.histplot instead
-    sns.histplot(data1, color='tab:blue', alpha=0.5,
-                 label=labels[0], ax=ax, kde=density)
-    sns.histplot(data2, color='tab:green', alpha=0.5,
-                 label=labels[1], ax=ax, kde=density)
-    sns.histplot(data3, color='tab:red', alpha=0.5,
-                 label=labels[2], ax=ax, kde=density)
-
-    # Set labels and title
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel('Frequency')
-    ax.set_title(title)
-
-    if xlim is not None:
-        ax.set_xlim(*xlim)
-
-    # Add legend
-    ax.legend()
-
-    fig.tight_layout()
-
-    # Display the chart
-    plt.show()
-
-
-def get_data_from_file_for_histograms(filenames: list, data_type: str):
-    """
-    Get data from files for histograms
-    :param filenames: list of filenames
-    :param data_type: column name in the file
-    :return: tuple of arrays of data
-    """
-    data = []
-    for filename in filenames:
-        if filename.endswith('_output.tsv'):
-            filename = filename.replace('_output.tsv', '_objectives.tsv')
-        df = pd.read_csv(os.path.realpath(
-            os.path.expanduser(filename)), sep='\t')
-        data.append(df[data_type].to_numpy())
-    return tuple(data)
-
-
-def create_stock_levels_graph(datafilename, columns, labels=None, xlabel='Time (days)',
-                              ylabel='Number of units', figsize=(8, 6), dpi=300,
-                              ylim=None, xlim=None, raw_data=False):
-    """
-    Create a graph of stock levels
-    :param datafilename: name of the file with data
-    :param columns: list of columns to plot
-    :param labels: list of labels for columns
-    :param xlabel: label for x axis
-    :param ylabel: label for y axis
-    :param figsize: size of the figure
-    :param dpi: resolution of the figure
-    :param ylim: tuple of (lower, upper) bounds for the y-axis
-    :return: None
-    """
-    if datafilename.endswith('_output.tsv'):
-        datafilename = datafilename.replace('_output.tsv', '_stocks.tsv')
-    df = pd.read_csv(os.path.realpath(
-        os.path.expanduser(datafilename)), sep='\t')
-    if raw_data:
-        df = df[columns] * df['total'].values[:, None]
-    else:
-        df = df[columns]
-    if labels is not None:
-        df.columns = labels
-    fig = plt.figure(dpi=dpi)
-    ax = fig.gca()
-    ax = df.plot(figsize=figsize, kind='line', xlabel=xlabel,
-                 ylabel=ylabel, ax=ax, grid=True)
-    if not raw_data:
-        ax.yaxis.set_major_formatter(mtick.PercentFormatter(1.0))
-    if ylim is not None:
-        ax.set_ylim(ylim)
-    if xlim is not None:
-        ax.set_xlim(xlim)
-
-
 def stacked_stock_levels_graph(datafilename, columns, labels=None, bbox_to_anchor=(1.01, 0.5),
                                xlabel='Time (days)', ylabel='Level of total stock', figsize=(8, 6), dpi=200,
                                demarcate_warmup=False, warmup_color='black', raw_data=False,
                                warmup_period=7*6*3):
     """
-    Create a stacked graph of stock levels
-    :param datafilename: name of the file with data
-    :param columns: list of columns to plot
-    :param labels: list of labels for columns
-    :param xlabel: label for x axis
-    :param ylabel: label for y axis
-    :param figsize: size of the figure
-    :param dpi: resolution of the figure
-    :return: None
+    Plots a stacked area graph of stock levels over time from a given data file.
+
+    Parameters:
+        datafilename (str): Path to the data file.
+            If it ends with '_output.tsv', it will be replaced with '_stocks.tsv'.
+        columns (list): List of column names to be plotted.
+        labels (list, optional): List of labels for the columns. Defaults to None.
+        bbox_to_anchor (tuple, optional): Position of the legend. Defaults to (1.01, 0.5).
+        xlabel (str, optional): Label for the x-axis. Defaults to 'Time (days)'.
+        ylabel (str, optional): Label for the y-axis. Defaults to 'Level of total stock'.
+        figsize (tuple, optional): Size of the figure. Defaults to (8, 6).
+        dpi (int, optional): Dots per inch for the figure. Defaults to 200.
+        demarcate_warmup (bool, optional): Whether to draw a line to demarcate the warmup period. Defaults to False.
+        warmup_color (str, optional): Color of the warmup line. Defaults to 'black'.
+        raw_data (bool, optional): Whether to use raw data for plotting instead of percentages. Defaults to False.
+        warmup_period (int, optional): Length of the warmup period in days. Defaults to 7×6×3 (i.e., 18 weeks).
+
+    Returns:
+        None: The function creates and displays a plot.
     """
     if datafilename.endswith('_output.tsv'):
         datafilename = datafilename.replace('_output.tsv', '_stocks.tsv')
@@ -379,7 +224,36 @@ def plot_age_dist_blood(datafilename, array='age_dist_given_to_scd', age_range=N
                         days_range=None, title='Age distribution of blood given to SCD patients over time',
                         vmax=300, cmap='viridis', figsize=(15, 6), dpi=200, re_index=False,
                         print_max=False, every_n_xtick=2, plot_avg=False, print_mean=False,
-                        pdf=None):
+                        pdf=None) -> pd.DataFrame | None:
+    """
+    Plots the age distribution of blood given to SCD (Sickle Cell Disease) patients over time.
+
+    Parameters:
+        datafilename (str): Path to the data file.
+            If it ends with '_output.tsv', it will be replaced with '_age_distributions.npz'.
+        array (str): Key to access the specific age distribution data within the .npz file. 
+            Determines which graph/data to plot.
+            Access the `.files` attribute of the loaded .npz file to see available keys. 
+            Default is 'age_dist_given_to_scd'.
+        age_range (array-like, optional): Range of ages to include in the plot.
+            Default is None, which uses ages 1 to 14.
+        days_range (array-like, optional): Range of days to include in the plot.
+            Default is None, which uses days 1 to 210.
+        title (str): Title of the plot. Default is 'Age distribution of blood given to SCD patients over time'.
+        vmax (int): Maximum value for the color scale. Default is 300.
+        cmap (str): Colormap to use for the heatmap. Default is 'viridis'.
+        figsize (tuple): Size of the figure. Default is (15, 6).
+        dpi (int): Dots per inch for the figure. Default is 200.
+        re_index (bool): Whether to re-index the days range. Default is False.
+        print_max (bool): Whether to print the maximum values in the DataFrame. Default is False.
+        every_n_xtick (int): Interval for showing x-tick labels. Default is 2.
+        plot_avg (bool): Whether to plot the average age distribution. Default is False.
+        print_mean (bool): Whether to print the mean values when plotting the average. Default is False.
+        pdf (str, optional): Path to save the plot as a PDF. Default is None.
+
+    Returns:
+        out (DataFrame, None): DataFrame of the age distribution if plot_avg is True, otherwise None.
+    """
     if datafilename.endswith('_output.tsv'):
         datafilename = datafilename.replace(
             '_output.tsv', '_age_distributions.npz')
@@ -421,6 +295,21 @@ def plot_age_dist_blood(datafilename, array='age_dist_given_to_scd', age_range=N
 
 def plot_avg_age_dist_blood_scd(df, title='Mean age distribution of blood given to SCD patients',
                                 ylim_max=None, figsize=(8, 6), dpi=200, pdf=None, print_mean=False):
+    """
+    Plots the average age distribution of blood given to Sickle Cell Disease (SCD) patients.
+
+    Parameters:
+        df (pd.DataFrame): DataFrame containing the age distribution data.
+        title (str, optional): Title of the plot. Default is 'Mean age distribution of blood given to SCD patients'.
+        ylim_max (float, optional): Maximum limit for the y-axis. Default is None.
+        figsize (tuple, optional): Size of the figure. Default is (8, 6).
+        dpi (int, optional): Dots per inch (DPI) for the figure. Default is 200.
+        pdf (str, optional): File path to save the plot as a PDF. Default is None.
+        print_mean (bool, optional): If True, prints the mean age of the blood units. Default is False.
+
+    Returns:
+        None
+    """
     fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
     df_hist = df.mean(axis=1)
     i_min = df_hist.index.min()
@@ -440,8 +329,23 @@ def plot_avg_age_dist_blood_scd(df, title='Mean age distribution of blood given 
         print(np.average(df_hist.index, weights=df_hist))
 
 
-def ccdf_avg_age_dist_blood_scd(datafilename, array='age_dist_given_to_scd', age_range=None,
-                                days_range=None, above_age=0, re_index=False):
+def ccdf_avg_age_dist_blood_scd(datafilename, array='age_dist_given_to_scd', age_range=None, days_range=None,
+                                above_age=0, re_index=False) -> float:
+    """
+    Calculate the complementary cumulative distribution function (CCDF) of the average age distribution for blood given to SCD patients.
+
+    Parameters:
+        datafilename (str): The path to the data file.
+            If it ends with '_output.tsv', it will be replaced with '_age_distributions.npz'.
+        array (str): The key for the age distribution array in the .npz file. Default is 'age_dist_given_to_scd'.
+        age_range (array-like, optional): The range of ages to consider. If None, defaults to np.arange(1, 15).
+        days_range (array-like, optional): The range of days to consider. If None, defaults to np.arange(1, 211).
+        above_age (int): The age above which to calculate the CCDF. Default is 0.
+        re_index (bool): Whether to re-index the days range starting from 1. Default is False.
+
+    Returns:
+        float: The CCDF value for the given age distribution and age cut-off.
+    """
     if datafilename.endswith('_output.tsv'):
         datafilename = datafilename.replace(
             '_output.tsv', '_age_distributions.npz')
@@ -463,8 +367,26 @@ def ccdf_avg_age_dist_blood_scd(datafilename, array='age_dist_given_to_scd', age
     return ccdf
 
 
-def draw_warmup_line(ax, x=168.5, color='black', linestyle='--', linewidth=2, text="Warm-up Period",
-                     xy=None, xytext=None):
+def draw_warmup_line(ax, x=168.5, color='black', linestyle='--', linewidth=2, text="Warm-up Period", xy=None,
+                     xytext=None):
+    """
+    Draws a vertical line on the given Axes object to indicate a warm-up period and annotates it with text.
+
+    Parameters:
+        ax (matplotlib.axes.Axes): The axes on which to draw the line.
+        x (float, optional): The x-coordinate for the vertical line. Default is 168.5.
+        color (str, optional): The color of the line and text. Default is 'black'.
+        linestyle (str, optional): The style of the line (e.g., '--' for dashed). Default is '--'.
+        linewidth (int, optional): The width of the line. Default is 2.
+        text (str, optional): The text to annotate the line with. Default is "Warm-up Period".
+        xy (tuple, optional): The (x, y) coordinates for the annotation.
+            Default is None, which calculates the y-coordinate as the mean of the y-axis limits.
+        xytext (tuple, optional): The (x, y) coordinates for the text position.
+            Default is None, which places the text slightly to the left of the line.
+
+    Returns:
+        ax (matplotlib.axes.Axes): The modified Axes object with the warm-up line and annotation.
+    """
     y = np.mean(ax.get_ylim())
     if xy is None:
         xy = (x, y)
@@ -476,130 +398,25 @@ def draw_warmup_line(ax, x=168.5, color='black', linestyle='--', linewidth=2, te
     return ax
 
 
-def reshape_abo_combos(datafilename, mixed_match=False, stderr=0):
-    if mixed_match:
-        suffix = '_abodmm_subs.tsv'
-    else:
-        suffix = '_abocm.tsv'
-    if datafilename.endswith('_output.tsv'):
-        datafilename = datafilename.replace('_output.tsv', suffix)
-    labels = ['O-', 'O+', 'B-', 'B+', 'A-', 'A+', 'AB-', 'AB+']
-    data = pd.read_csv(os.path.realpath(os.path.expanduser(
-        datafilename)), sep='\t', nrows=2, index_col=0)
-    return pd.DataFrame(data.values[stderr, :].reshape(8, 8), columns=labels, index=labels)
+def avg_stock_composition(rules, rule_files, donations=None, figsize=(12, 5), dpi=200, ncol=4,
+                          bbox_to_anchor=(0.5, -0.12), pdf=None):
+    """
+    Plots the average stock composition of blood groups based on given rules and rule files.
 
+    Parameters:
+        rules (list): List of rule names to be used as labels in the plot.
+        rule_files (list): List of file paths containing stock data for each rule.
+        donations (ndarray, optional): Array of initial donation proportions for each blood group.
+            Defaults to [14.6, 36.2, 2.8, 7.8, 7.8, 28.4, 0.6, 1.8] for O-, O+, B-, B+, A-, A+, AB-, and AB+ respectively.
+        figsize (tuple, optional): Size of the figure. Defaults to (12, 5).
+        dpi (int, optional): Dots per inch for the figure. Defaults to 200.
+        ncol (int, optional): Number of columns in the legend. Defaults to 4.
+        bbox_to_anchor (tuple, optional): Bounding box for the legend. Defaults to (0.5, -0.12).
+        pdf (str, optional): File path to save the figure as a PDF. If None, the figure is not saved. Defaults to None.
 
-def add_totals_to_abo_combos(reshaped_abo_combos):
-    reshaped_abo_combos['Total'] = reshaped_abo_combos.sum(axis=1)
-    reshaped_abo_combos.loc['Total'] = reshaped_abo_combos.sum(axis=0)
-    return reshaped_abo_combos
-
-
-def mixed_allocation_totals(datafilename, print_with_stderr=False, breakdowns=False):
-    if datafilename.endswith('_output.tsv'):
-        datafilename = datafilename.replace('_output.tsv', '_abodmm_subs.tsv')
-    data = pd.read_csv(os.path.realpath(
-        os.path.expanduser(datafilename)), sep='\t', nrows=2, index_col=0)
-    abo_x = np.array([0, 0, 1, 1, 2, 2, 3, 3])
-    abo_mm_indices = abo_x > abo_x[:, None]
-    d_x = np.array([0, 1] * 4)
-    d_mm_indices = d_x > d_x[:, None]
-    abod_mm_indices = abo_mm_indices & d_mm_indices
-    indices = (d_mm_indices, abo_mm_indices, abod_mm_indices)
-    compatible_indices = (
-        [True, True, True, True,                # O-
-         False, True, False, True,              # B-
-         False, False, True, True,              # A-
-         False, False, False, True],            # AB-
-        [True, True, True, True, True, True,    # O-
-         False, True, False, True, False, True,  # O+
-         False, False, True, True,               # B-
-         False, False, False, True,              # B+
-         True, True,                             # A-
-         False, True],                           # A+
-        [True, True, True,                      # O-
-         False, True,                           # B-
-         True]                                  # A-
-    )
-    if breakdowns:
-        return_values = []
-        for i, ci in zip(indices, compatible_indices):
-            return_values.append(data.loc[:, i.flatten()].loc[:, ci])
-        return tuple(return_values)
-
-    return_values = []
-    for i in indices:
-        values = data.loc[:, i.flatten()].sum(axis=1)
-        value = values[0]
-        if print_with_stderr:
-            value = f'{values[0]:.1f} ± {values[1]:.2f}'
-        return_values.append(value)
-    return tuple(return_values)
-
-
-def abo_combos_usage_demand(totalled_combos):
-    demanded = pd.DataFrame((totalled_combos.values[-1, :-1]/totalled_combos.values[-1, :-1].sum())[
-                            None, :], columns=totalled_combos.columns[:-1], index=['Demand'])
-    used = pd.DataFrame((totalled_combos.values[:-1, -1]/totalled_combos.values[:-1, -1].sum())[
-                        None, :], columns=totalled_combos.columns[:-1], index=['Usage'])
-    return pd.concat([demanded, used], axis=0)
-
-
-def compile_tuning_points_all_objectives(folder, pattern='_objectives.tsv',
-                                         suffix='tuning_all-vars-objs.tsv'):
-    files = os.listdir(folder)
-    tuning_points = [f for f in files if f.endswith('tuning_points.tsv')][0]
-    files = [os.path.join(folder, x) for x in files if x.endswith(pattern)]
-    files.sort(key=lambda x: os.path.getctime(os.path.join(folder, x)))
-
-    averages = []
-    for file in files:
-        # Load the file into a pandas dataframe
-        df = pd.read_csv(os.path.join(folder, file), sep='\t')
-
-        # Calculate the column averages
-        column_averages = df.mean()
-
-        # Add the column averages to the list of averages
-        averages.append(column_averages)
-
-    # Concatenate the list of averages into a single dataframe
-    averages_df = pd.concat(averages, axis=1)
-    averages_df = averages_df.transpose()
-    all_vars = pd.read_csv(os.path.join(folder,
-                                        tuning_points),
-                           sep='\t')
-    var_names = ['immunogenicity', 'usability',
-                 'substitutions', 'fifo', 'young_blood']
-    all_vars = all_vars[var_names]
-    vars_objs = pd.concat([all_vars, averages_df], axis=1)
-    vars_objs.to_csv(os.path.join(folder,
-                                  tuning_points.replace('tuning_points.tsv',
-                                                        suffix)),
-                     sep='\t', index=False)
-    return vars_objs
-
-
-def summarise_abo_mixed_allocations(abo_mixed_allocations: pd.DataFrame) -> pd.DataFrame:
-    donor_target = [('O', 'B'),
-                    ('O', 'A'),
-                    ('O', 'AB'),
-                    ('B', 'AB'),
-                    ('A', 'AB')]
-    data = dict()
-    for combo in donor_target:
-        cols = [col for col in abo_mixed_allocations.columns if (
-            combo[0] + '+ ' in col or combo[0] + '- ' in col) and 'to ' + combo[1] in col]
-        mean_values = [abo_mixed_allocations[col][0] for col in cols]
-        std_err_values = [abo_mixed_allocations[col][1] for col in cols]
-        col_vals = [sum(mean_values), np.sqrt(np.square(std_err_values).sum())]
-        data.update({f'{combo[0]} to {combo[1]}': col_vals})
-    return pd.DataFrame(data, index=['Mean', 'Std. Err.'])
-
-
-def avg_stock_composition(rules, rule_files, donations=None,
-                          figsize=(12, 5), dpi=200, ncol=4, bbox_to_anchor=(0.5, -0.12),
-                          pdf=None):
+    Returns:
+        None
+    """
     blood_grps = ['O-', 'O+', 'B-', 'B+', 'A-', 'A+', 'AB-', 'AB+']
     if donations is None:
         donations = np.array([14.6, 36.2, 2.8, 7.8, 7.8, 28.4, 0.6, 1.8])
