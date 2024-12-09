@@ -57,7 +57,9 @@ python -m BSCSimulator.main [parameterfile]
 
 ```
 
-If a parameter file is not provided, the simulator will use the default parameters defined in the `BSCSimulator/experiments/parameters.py` file.
+If a parameter file is not provided, the simulator will use the default parameters defined in the default file, [`BSCSimulator/experiments/parameters.py`](BSCSimulator/experiments/parameters.py).
+Also, if a parameter is not provided in the optional parameter file, the simulator will use the default value defined in the default file.
+However, this is not 'recursive' to parameters that are dictionaries. If you want to change a single value in a dictionary, you will need to provide the entire dictionary (with the other key-value pairs you want to keep the same) in the parameter file.
 
 The parameter files used for the experiments in our paper are under the [`scratch/paramfiles`](scratch/paramfiles) directory. For the matching rules with forecasting (i.e., **E1**), you will need to run the precomputation of supply/demand beforehand. The parameter file for the precomputation is under the [`scratch/paramfiles/precomputation`](scratch/paramfiles/precomputation) directory.
 For completeness:
