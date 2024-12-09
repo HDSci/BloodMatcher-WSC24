@@ -1,10 +1,13 @@
+"""
+This module contains functions for loading data and running simulation experiments.
+These simulations are either one-off experiments or one of many iterations of a tuning process.
+"""
 import datetime
 import json
 import logging
 import os
 import time
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.stats import randint
@@ -13,7 +16,7 @@ from BSCSimulator.antigen import Antigens
 from BSCSimulator.demand import Demand
 from BSCSimulator.inventory import Inventory
 from BSCSimulator.matching import MatchingArea
-from BSCSimulator.simulator import Simulation, SimulationManager
+from BSCSimulator.simulator import SimulationManager
 from BSCSimulator.supply import Supply
 from BSCSimulator.util import (ANTIGENS, abd_usability,
                                dummy_population_phenotypes,
