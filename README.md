@@ -4,6 +4,8 @@
 This repository contains the software implementation and source code for our paper titled "Optimization Of Extended Red Blood Cell Matching In Transfusion Dependent Sickle Cell Patients" submitted to the 2024 Winter Simulation Conference (WSC).
 
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14343040.svg)](https://doi.org/10.5281/zenodo.14343040)
+
 
 ## Contents & Structure of the Repository
 
