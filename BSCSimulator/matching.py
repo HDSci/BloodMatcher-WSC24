@@ -174,7 +174,7 @@ class MatchingArea:
             units (ndarray): The array of forecasted units.
             requests (tuple): A tuple containing two numpy arrays:
                 - requests[0] (ndarray): The array of forecasted requests.
-                - requests[1] (ndarray): The array of absolute allocations.
+                - requests[1] (ndarray): The array of alloantibody masks.
         """
         self.forecast_units = units.copy()
         padding_shape = (requests[0].shape[0], 1)
