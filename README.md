@@ -1,7 +1,7 @@
 # Blood Supply Chain Simulator & Extended Blood Matching for Sickle Cell Patients
 
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14343040.svg)](https://doi.org/10.5281/zenodo.14343040)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14343039.svg)](https://doi.org/10.5281/zenodo.14343039)
 
 This repository contains the software implementation and source code for our paper titled ["Optimization Of Extended Red Blood Cell Matching In Transfusion Dependent Sickle Cell Patients"](https://ieeexplore.ieee.org/document/10838863):
 
