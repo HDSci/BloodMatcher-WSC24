@@ -1,10 +1,12 @@
 # Blood Supply Chain Simulator & Extended Blood Matching for Sickle Cell Patients
 
 
-This repository contains the software implementation and source code for our paper titled "Optimization Of Extended Red Blood Cell Matching In Transfusion Dependent Sickle Cell Patients" submitted to the 2024 Winter Simulation Conference (WSC).
-
-
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14343040.svg)](https://doi.org/10.5281/zenodo.14343040)
+
+This repository contains the software implementation and source code for our paper titled ["Optimization Of Extended Red Blood Cell Matching In Transfusion Dependent Sickle Cell Patients"](https://ieeexplore.ieee.org/document/10838863):
+
+> F. B. Oyebolu, M. Chion, M. L. Wemelsfelder, S. Trompeter, N. Gleadall and W. J. Astle, "Optimization of Extended Red Blood Cell Matching in Transfusion Dependent Sickle Cell Patients," 2024 Winter Simulation Conference (WSC), Orlando, FL, USA, 2024, pp. 1023-1034, doi: 10.1109/WSC63780.2024.10838863.
+
 
 
 ## Contents & Structure of the Repository
