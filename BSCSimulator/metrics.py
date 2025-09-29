@@ -125,6 +125,20 @@ def major_antigen_substitution(supply, demand, population=False, pop_frequencies
 
 
 def fifo_discount(remaining_shelf_life, max_life=35, reqs_dates=None, scd_pat=False):
+    """
+    Calculate the FIFO discount based on the remaining shelf life of items.
+    Also adds constraints to prevent forecasted units from being used for today's requests,
+    and to prevent units that will expire from being used for forecasted requests.
+
+    Parameters:
+        remaining_shelf_life (array-like): An array of remaining shelf life values for items.
+        max_life (int, optional): The maximum shelf life of items. Defaults to 35.
+        reqs_dates (array-like, optional): An array of request dates. If provided, the discount is calculated based on these dates. Defaults to None.
+        scd_pat (array-like, optional): A boolean array indicating which requests are for SCD patients. Defaults to False.
+
+    Returns:
+       discount (ndarray): A 2D array of discount values based on the FIFO policy.
+    """
     if reqs_dates is None:
         discount = _fifo_discount(remaining_shelf_life)
         # Penalise forecasted units so they cannot be used for today's requests
